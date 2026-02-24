@@ -203,3 +203,5 @@ Login/Register ──► POST /api/auth/login (or /register)
 - [ ] Email notifications
 - [ ] File uploads (resume, offer letters)
 - [ ] Real-time notifications (Socket.io)
+
+https://claude.ai/chat/d8f9ca2c-5f68-4c75-a3fa-6ca91706d17f

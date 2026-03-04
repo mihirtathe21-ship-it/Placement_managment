@@ -61,21 +61,24 @@ app.post("/api/auth/login", async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ message: "Email and password are required" });
 
-    const user = await User.findOne({ email });
+    // 🔥 IMPORTANT FIX HERE
+    const user = await User.findOne({ email }).select("+password");
+
     if (!user)
       return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
     res.status(200).json({ message: "Login successful" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login failed" });
   }
 });
-
 // ==============================
 // Server Start
 // ==============================

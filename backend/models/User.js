@@ -51,7 +51,10 @@ const userSchema = new mongoose.Schema({
 
 // Indexes for faster queries
 userSchema.index({ role: 1 });
-userSchema.index({ email: 1 });
+// `email` already has `unique: true` in its schema path so a second
+// index declaration here would trigger a duplicate-index warning.
+// Remove or comment out to prevent Mongoose warnings.
+// userSchema.index({ email: 1 });
 
 // Export as ES Module
 export const User = mongoose.model("User", userSchema);

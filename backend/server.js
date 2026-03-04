@@ -11,6 +11,7 @@ import applicationRoutes from './routes/Applicationroutes.js'
 import analyticsRoutes from './routes/Analyticsroutes.js'
 import notificationRoutes from './routes/Notificationroutes.js'
 import errorHandler from './middleware/errorHandler.js'
+import studentRoutes from './routes/studentRoutes.js'
 
 dotenv.config()
 
@@ -56,7 +57,8 @@ export const sendRealtimeNotification = (userId, notification) => {
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))                        // ← FIXED
+app.use(express.urlencoded({ limit: '50mb', extended: true }))  // ← ADDED
 
 // Connect to MongoDB
 connectDB()
@@ -68,6 +70,7 @@ app.use('/api/jobs', jobRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/students', studentRoutes)
 
 // Health check
 app.get('/', (req, res) => res.json({ message: '🚀 PlaceNext API is running' }))

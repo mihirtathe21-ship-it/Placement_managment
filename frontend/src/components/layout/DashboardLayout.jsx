@@ -1,168 +1,147 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Briefcase, FileText, Settings,
-  LogOut, Menu, X, ChevronRight, Bell, Briefcase as Logo
+  LayoutDashboard, Briefcase, FileText, BarChart2, Bell,
+  Users, LogOut, Menu, X, ChevronRight, GraduationCap,
+  Building2, Shield, Upload
 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 
-const NAV_LINKS = {
-  admin: [
-    { path: '/admin-dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin-dashboard/users', icon: Users, label: 'Users' },
-    { path: '/admin-dashboard/reports', icon: FileText, label: 'Reports' },
-    { path: '/admin-dashboard/settings', icon: Settings, label: 'Settings' },
+const NAV = {
+  student: [
+    { label: 'Dashboard',       icon: LayoutDashboard, path: '/student-dashboard' },
+    { label: 'Browse Jobs',     icon: Briefcase,       path: '/jobs' },
+    { label: 'My Applications', icon: FileText,        path: '/applications' },
+    { label: 'Notifications',   icon: Bell,            path: '/notifications' },
   ],
   tpo: [
-    { path: '/tpo-dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/tpo-dashboard/students', icon: Users, label: 'Students' },
-    { path: '/tpo-dashboard/drives', icon: Briefcase, label: 'Placement Drives' },
-    { path: '/tpo-dashboard/reports', icon: FileText, label: 'Reports' },
-  ],
-  student: [
-    { path: '/student-dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/student-dashboard/jobs', icon: Briefcase, label: 'Job Listings' },
-    { path: '/student-dashboard/applications', icon: FileText, label: 'My Applications' },
-    { path: '/student-dashboard/profile', icon: Users, label: 'Profile' },
+    { label: 'Dashboard',      icon: LayoutDashboard, path: '/tpo-dashboard' },
+    { label: 'Drives',         icon: Briefcase,       path: '/jobs' },
+    { label: 'Students',       icon: GraduationCap,   path: '/tpo-dashboard/students' },
+    { label: 'Excel Shortlist',icon: Upload,          path: '/tpo-dashboard/shortlist' },
+    { label: 'Analytics',      icon: BarChart2,       path: '/analytics' },
+    { label: 'Notifications',  icon: Bell,            path: '/notifications' },
   ],
   recruiter: [
-    { path: '/recruiter-dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/recruiter-dashboard/post', icon: Briefcase, label: 'Post Jobs' },
-    { path: '/recruiter-dashboard/candidates', icon: Users, label: 'Candidates' },
-    { path: '/recruiter-dashboard/reports', icon: FileText, label: 'Reports' },
+    { label: 'Dashboard',    icon: LayoutDashboard, path: '/recruiter-dashboard' },
+    { label: 'Post Drive',   icon: Briefcase,       path: '/jobs/new' },
+    { label: 'My Drives',    icon: FileText,        path: '/recruiter-dashboard/drives' },
+    { label: 'Candidates',   icon: Users,           path: '/recruiter-dashboard/candidates' },
+    { label: 'Notifications',icon: Bell,            path: '/notifications' },
+  ],
+  admin: [
+    { label: 'Dashboard',    icon: LayoutDashboard, path: '/admin-dashboard' },
+    { label: 'Users',        icon: Users,           path: '/admin-dashboard/users' },
+    { label: 'Drives',       icon: Briefcase,       path: '/jobs' },
+    { label: 'Analytics',    icon: BarChart2,       path: '/analytics' },
+    { label: 'Notifications',icon: Bell,            path: '/notifications' },
   ],
 }
 
-const ROLE_COLORS = {
-  admin: 'from-red-500/20 to-orange-500/20 border-red-500/20 text-red-300',
-  tpo: 'from-purple-500/20 to-blue-500/20 border-purple-500/20 text-purple-300',
-  student: 'from-navy-500/20 to-cyan-500/20 border-navy-500/20 text-navy-300',
-  recruiter: 'from-green-500/20 to-teal-500/20 border-green-500/20 text-green-300',
+const META = {
+  student:   { label: 'Student',   color: 'from-blue-500 to-blue-700',      dot: '#4f8ef7', Icon: GraduationCap },
+  tpo:       { label: 'TPO',       color: 'from-emerald-500 to-emerald-700', dot: '#34d399', Icon: Shield },
+  recruiter: { label: 'Recruiter', color: 'from-violet-500 to-violet-700',  dot: '#a78bfa', Icon: Building2 },
+  admin:     { label: 'Admin',     color: 'from-rose-500 to-rose-700',       dot: '#f87171', Icon: Shield },
 }
 
-export default function DashboardLayout({ children, title }) {
+export default function DashboardLayout({ children }) {
   const { user, logout } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  const links = NAV_LINKS[user?.role] || []
-  const roleColor = ROLE_COLORS[user?.role] || ''
+  const nav = NAV[user?.role] || []
+  const meta = META[user?.role] || META.student
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
+
+  const Sidebar = () => (
+    <div className="flex flex-col h-full bg-[#080d1a] border-r border-white/[0.06]">
+      {/* Brand */}
+      <div className="px-5 pt-6 pb-5 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${meta.color} flex items-center justify-center shadow`}>
+            <meta.Icon className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-white font-bold text-sm tracking-tight">PlaceNext</p>
+            <p className="text-white/30 text-[10px] uppercase tracking-widest">{meta.label}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* User pill */}
+      <div className="px-4 py-3 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2.5 bg-white/[0.04] rounded-xl px-3 py-2.5">
+          <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${meta.color} flex items-center justify-center text-[11px] font-bold text-white shrink-0`}>
+            {user?.name?.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-white text-xs font-semibold truncate leading-tight">{user?.name}</p>
+            <p className="text-white/30 text-[10px] truncate">{user?.email}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+        {nav.map(({ label, icon: Icon, path }) => {
+          const active = location.pathname === path
+          return (
+            <Link key={path} to={path} onClick={() => setOpen(false)}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] transition-all group ${
+                active ? 'bg-white/[0.08] text-white font-semibold' : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04]'
+              }`}>
+              <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-white/25 group-hover:text-white/50'}`} />
+              {label}
+              {active && <ChevronRight className="w-3 h-3 ml-auto text-white/20" />}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div className="px-3 py-3 border-t border-white/[0.06]">
+        <button onClick={handleLogout}
+          className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-[13px] text-white/30 hover:text-red-400 hover:bg-red-500/[0.06] transition-all">
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen mesh-bg flex">
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 glass-card rounded-none border-r border-white/5
-        transform transition-transform duration-300 flex flex-col
-        lg:relative lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        {/* Logo */}
-        <div className="p-6 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-navy-400 to-navy-600 rounded-xl flex items-center justify-center">
-              <Logo className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <span className="font-display font-bold text-white text-lg leading-none">PlaceNext</span>
-              <p className="text-white/30 text-xs mt-0.5">Portal</p>
-            </div>
-          </div>
-        </div>
-
-        {/* User Info */}
-        <div className="p-4 mx-3 my-3 rounded-xl bg-white/3 border border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-navy-400 to-navy-600 flex items-center justify-center font-bold text-sm text-white flex-shrink-0">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{user?.name}</p>
-              <p className="text-white/40 text-xs truncate">{user?.email}</p>
-            </div>
-          </div>
-          <div className={`mt-3 inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide bg-gradient-to-r border ${roleColor}`}>
-            {user?.role}
-          </div>
-        </div>
-
-        {/* Nav Links */}
-        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-          {links.map(({ path, icon: Icon, label }) => (
-            <NavLink
-              key={path}
-              to={path}
-              end={path.split('/').length === 2}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
-                ${isActive
-                  ? 'bg-navy-500/25 text-white border border-navy-400/20'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-                }
-              `}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Logout */}
-        <div className="p-3 border-t border-white/5">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
+    <div className="min-h-screen bg-[#0a0f1e] flex text-white">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex w-52 flex-col fixed inset-y-0 left-0 z-30">
+        <Sidebar />
       </aside>
 
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      {/* Mobile overlay */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-60">
+            <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-white/30 hover:text-white z-10">
+              <X className="w-5 h-5" />
+            </button>
+            <Sidebar />
+          </aside>
+        </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="h-16 glass-card rounded-none border-b border-white/5 flex items-center justify-between px-6 flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            <div className="flex items-center gap-2 text-white/30 text-sm">
-              <span>PlaceNext</span>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-white">{title || 'Dashboard'}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="relative p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-navy-400 rounded-full" />
-            </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-400 to-navy-600 flex items-center justify-center font-bold text-xs text-white">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
-        </main>
+      {/* Content */}
+      <div className="flex-1 lg:ml-52 flex flex-col">
+        {/* Mobile topbar */}
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-[#080d1a]/90 border-b border-white/[0.06] backdrop-blur">
+          <button onClick={() => setOpen(true)} className="text-white/40 hover:text-white">
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="text-white font-bold text-sm">PlaceNext</span>
+        </div>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
   )

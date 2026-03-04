@@ -1,60 +1,51 @@
-// backend/models/User.js
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const userSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: [true, "Name is required"], 
-    trim: true, 
-    minlength: [2, "Name must be at least 2 characters"] 
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+    trim: true,
+    minlength: [2, 'Name must be at least 2 characters'],
   },
-  email: { 
-    type: String, 
-    required: [true, "Email is required"], 
-    unique: true, 
-    lowercase: true, 
-    trim: true, 
-    match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"] 
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
   },
-  password: { 
-    type: String, 
-    required: [true, "Password is required"], 
-    minlength: [6, "Password must be at least 6 characters"], 
-    select: false 
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters'],
+    select: false,
   },
-  role: { 
-    type: String, 
-    enum: ["admin", "tpo", "student", "recruiter"], 
-    required: [true, "Role is required"] 
+  role: {
+    type: String,
+    enum: ['admin', 'tpo', 'student', 'recruiter'],
+    required: [true, 'Role is required'],
   },
-  phone: { 
-    type: String, 
-    required: [true, "Phone is required"] 
+  phone: {
+    type: String,
+    required: [true, 'Phone is required'],
   },
-  isActive: { 
-    type: Boolean, 
-    default: true 
+  isActive: {
+    type: Boolean,
+    default: true,
   },
-
   // Student-specific fields
   rollNumber: { type: String, sparse: true },
   branch: { type: String },
   passingYear: { type: Number },
   cgpa: { type: Number, min: 0, max: 10 },
-
   // Recruiter-specific fields
   companyName: { type: String },
-  designation: { type: String }
+  designation: { type: String },
 }, {
   timestamps: true,
-});
+})
 
-// Indexes for faster queries
-userSchema.index({ role: 1 });
-// `email` already has `unique: true` in its schema path so a second
-// index declaration here would trigger a duplicate-index warning.
-// Remove or comment out to prevent Mongoose warnings.
-// userSchema.index({ email: 1 });
+userSchema.index({ role: 1 })
 
-// Export as ES Module
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.model('User', userSchema)

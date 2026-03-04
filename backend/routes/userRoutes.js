@@ -1,7 +1,8 @@
-const express = require('express')
+import express from 'express'
+import { User } from '../models/User.js'
+import { protect, authorize } from '../middleware/auth.js'
+
 const router = express.Router()
-const User = require('../models/User')
-const { protect, authorize } = require('../middleware/auth')
 
 // @desc  Get all users (Admin only)
 router.get('/', protect, authorize('admin'), async (req, res, next) => {
@@ -9,11 +10,13 @@ router.get('/', protect, authorize('admin'), async (req, res, next) => {
     const { role, page = 1, limit = 20 } = req.query
     const filter = {}
     if (role) filter.role = role
+
     const users = await User.find(filter)
       .select('-password')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit))
+
     const total = await User.countDocuments(filter)
     res.json({ users, total, page: Number(page), pages: Math.ceil(total / limit) })
   } catch (err) {
@@ -45,7 +48,11 @@ router.get('/:id', protect, authorize('admin', 'tpo'), async (req, res, next) =>
 // @desc  Update user status (Admin only)
 router.patch('/:id/status', protect, authorize('admin'), async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: req.body.isActive }, { new: true })
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive: req.body.isActive },
+      { new: true }
+    )
     if (!user) return res.status(404).json({ message: 'User not found' })
     res.json({ user, message: `User ${req.body.isActive ? 'activated' : 'deactivated'} successfully` })
   } catch (err) {
@@ -53,4 +60,4 @@ router.patch('/:id/status', protect, authorize('admin'), async (req, res, next) 
   }
 })
 
-module.exports = router
+export default router

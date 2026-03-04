@@ -1,6 +1,6 @@
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const User = require('../models/User')
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import { User } from '../models/User.js'
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -28,9 +28,13 @@ const sanitizeUser = (user) => ({
 // @desc    Register user (student or recruiter only)
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, phone, rollNumber, branch, passingYear, cgpa, companyName, designation } = req.body
+    const {
+      name, email, password, role, phone,
+      rollNumber, branch, passingYear, cgpa,
+      companyName, designation,
+    } = req.body
 
     // Only allow student and recruiter to self-register
     if (!['student', 'recruiter'].includes(role)) {
@@ -72,7 +76,7 @@ exports.register = async (req, res, next) => {
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-exports.login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
 
@@ -104,7 +108,7 @@ exports.login = async (req, res, next) => {
 // @desc    Get current logged-in user
 // @route   GET /api/auth/me
 // @access  Private
-exports.getMe = async (req, res, next) => {
+export const getMe = async (req, res, next) => {
   try {
     res.json({ user: sanitizeUser(req.user) })
   } catch (err) {

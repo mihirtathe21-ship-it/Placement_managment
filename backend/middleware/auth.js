@@ -1,9 +1,10 @@
-const jwt = require('jsonwebtoken')
-const User = require('../models/User')
+import jwt from 'jsonwebtoken'
+import { User } from '../models/User.js'
 
 // Verify JWT token
-exports.protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   let token
+
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1]
   }
@@ -15,9 +16,11 @@ exports.protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.id)
+
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'User not found or deactivated.' })
     }
+
     req.user = user
     next()
   } catch (err) {
@@ -26,7 +29,7 @@ exports.protect = async (req, res, next) => {
 }
 
 // Role-based authorization
-exports.authorize = (...roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({

@@ -2,18 +2,18 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
-import LoginPage from './pages/auth/LoginPage'
-import RegisterPage from './pages/auth/RegisterPage'
+import LoginPage        from './pages/auth/LoginPage'
+import RegisterPage     from './pages/auth/RegisterPage'
 import StudentDashboard from './pages/dashboards/StudentDashboard'
-import TPODashboard from './pages/dashboards/TPODashboard'
+import TPODashboard     from './pages/dashboards/TPODashboard'
 import RecruiterDashboard from './pages/dashboards/RecruiterDashboard'
-import AdminDashboard from './pages/dashboards/AdminDashboard'
-import JobsPage from './pages/jobs/JobsPage'
-import JobDetailPage from './pages/jobs/JobDetailPage'   // ← NEW
-import PostJobPage from './pages/jobs/PostJobPage'
+import AdminDashboard   from './pages/dashboards/AdminDashboard'
+import JobsPage         from './pages/jobs/JobsPage'
+import JobDetailPage    from './pages/jobs/JobDetailPage'
+import PostJobPage      from './pages/jobs/PostJobPage'
 import MyApplicationsPage from './pages/applications/MyApplicationsPage'
-import ApplicantsPage from './pages/applications/ApplicantsPage'
-import AnalyticsPage from './pages/analytics/AnalyticsPage'
+import ApplicantsPage   from './pages/applications/ApplicantsPage'
+import AnalyticsPage    from './pages/analytics/AnalyticsPage'
 import NotificationsPage from './pages/notifications/NotificationsPage'
 
 const ROLE_HOME = {
@@ -35,7 +35,9 @@ function PrivateRoute({ children }) {
 
 function RoleRoute({ children, roles }) {
   const { user } = useAuth()
-  if (!roles.includes(user?.role)) return <Navigate to={ROLE_HOME[user?.role] || '/login'} replace />
+  if (!roles.includes(user?.role)) {
+    return <Navigate to={ROLE_HOME[user?.role] || '/login'} replace />
+  }
   return children
 }
 
@@ -50,36 +52,84 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Toaster position="top-right" toastOptions={{
-          style: { background: '#0c1221', color: '#fff', border: '1px solid rgba(255,255,255,0.07)', fontSize: '13px' }
-        }} />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#0c1221',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.07)',
+              fontSize: '13px',
+            },
+          }}
+        />
         <Routes>
-          {/* Public */}
+          {/* ── Public ── */}
           <Route path="/login"    element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Role Dashboards */}
-          <Route path="/student-dashboard"          element={<PrivateRoute><RoleRoute roles={['student']}><StudentDashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/tpo-dashboard"              element={<PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/tpo-dashboard/students"     element={<PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/tpo-dashboard/shortlist"    element={<PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/tpo-dashboard/applications" element={<PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/recruiter-dashboard"        element={<PrivateRoute><RoleRoute roles={['recruiter']}><RecruiterDashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/recruiter-dashboard/drives" element={<PrivateRoute><RoleRoute roles={['recruiter']}><RecruiterDashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/admin-dashboard"            element={<PrivateRoute><RoleRoute roles={['admin']}><AdminDashboard /></RoleRoute></PrivateRoute>} />
-          <Route path="/admin-dashboard/users"      element={<PrivateRoute><RoleRoute roles={['admin']}><AdminDashboard /></RoleRoute></PrivateRoute>} />
+          {/* ── Student ── */}
+          <Route path="/student-dashboard" element={
+            <PrivateRoute><RoleRoute roles={['student']}><StudentDashboard /></RoleRoute></PrivateRoute>
+          } />
 
-          {/* Jobs */}
-          <Route path="/jobs"     element={<PrivateRoute><JobsPage /></PrivateRoute>} />
-          <Route path="/jobs/new" element={<PrivateRoute><RoleRoute roles={['tpo','recruiter','admin']}><PostJobPage /></RoleRoute></PrivateRoute>} />
-          <Route path="/jobs/:id" element={<PrivateRoute><JobDetailPage /></PrivateRoute>} />  {/* ← NEW */}
-          <Route path="/jobs/:id/applicants" element={<PrivateRoute><RoleRoute roles={['tpo','recruiter','admin']}><ApplicantsPage /></RoleRoute></PrivateRoute>} />
+          {/* ── TPO (all sub-routes render TPODashboard, tab switching via location.pathname) ── */}
+          <Route path="/tpo-dashboard" element={
+            <PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>
+          } />
+          <Route path="/tpo-dashboard/students" element={
+            <PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>
+          } />
+          <Route path="/tpo-dashboard/upload" element={
+            <PrivateRoute><RoleRoute roles={['tpo']}><TPODashboard /></RoleRoute></PrivateRoute>
+          } />
 
-          {/* Other */}
-          <Route path="/applications"  element={<PrivateRoute><RoleRoute roles={['student']}><MyApplicationsPage /></RoleRoute></PrivateRoute>} />
-          <Route path="/analytics"     element={<PrivateRoute><RoleRoute roles={['admin','tpo']}><AnalyticsPage /></RoleRoute></PrivateRoute>} />
-          <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
+          {/* ── Recruiter ── */}
+          <Route path="/recruiter-dashboard" element={
+            <PrivateRoute><RoleRoute roles={['recruiter']}><RecruiterDashboard /></RoleRoute></PrivateRoute>
+          } />
+          <Route path="/recruiter-dashboard/drives" element={
+            <PrivateRoute><RoleRoute roles={['recruiter']}><RecruiterDashboard /></RoleRoute></PrivateRoute>
+          } />
 
+          {/* ── Admin ── */}
+          <Route path="/admin-dashboard" element={
+            <PrivateRoute><RoleRoute roles={['admin']}><AdminDashboard /></RoleRoute></PrivateRoute>
+          } />
+          <Route path="/admin-dashboard/users" element={
+            <PrivateRoute><RoleRoute roles={['admin']}><AdminDashboard /></RoleRoute></PrivateRoute>
+          } />
+
+          {/* ── Jobs ── */}
+          <Route path="/jobs" element={
+            <PrivateRoute><JobsPage /></PrivateRoute>
+          } />
+          <Route path="/jobs/new" element={
+            <PrivateRoute>
+              <RoleRoute roles={['tpo', 'recruiter', 'admin']}><PostJobPage /></RoleRoute>
+            </PrivateRoute>
+          } />
+          <Route path="/jobs/:id" element={
+            <PrivateRoute><JobDetailPage /></PrivateRoute>
+          } />
+          <Route path="/jobs/:id/applicants" element={
+            <PrivateRoute>
+              <RoleRoute roles={['tpo', 'recruiter', 'admin']}><ApplicantsPage /></RoleRoute>
+            </PrivateRoute>
+          } />
+
+          {/* ── Other ── */}
+          <Route path="/applications" element={
+            <PrivateRoute><RoleRoute roles={['student']}><MyApplicationsPage /></RoleRoute></PrivateRoute>
+          } />
+          <Route path="/analytics" element={
+            <PrivateRoute><RoleRoute roles={['admin', 'tpo']}><AnalyticsPage /></RoleRoute></PrivateRoute>
+          } />
+          <Route path="/notifications" element={
+            <PrivateRoute><NotificationsPage /></PrivateRoute>
+          } />
+
+          {/* ── Default ── */}
           <Route path="/"  element={<Root />} />
           <Route path="*"  element={<Root />} />
         </Routes>

@@ -42,10 +42,8 @@ const seed = async () => {
       continue;
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(userData.password, salt);
-
-    await User.create({ ...userData, password: hashedPassword });
+    // ✅ Let User.create() trigger the pre-save hook for password hashing
+    await User.create(userData);
 
     console.log(`✅ Created ${userData.role}: ${userData.email}`);
   }

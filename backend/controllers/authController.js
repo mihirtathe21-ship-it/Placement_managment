@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { User } from '../models/User.js'
 
@@ -9,56 +8,48 @@ const generateToken = (id) => {
 }
 
 const sanitizeUser = (user) => ({
-  _id: user._id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  phone: user.phone,
-  // Student fields
-  rollNumber: user.rollNumber,
-  branch: user.branch,
+  _id:         user._id,
+  name:        user.name,
+  email:       user.email,
+  role:        user.role,
+  phone:       user.phone,
+  rollNumber:  user.rollNumber,
+  branch:      user.branch,
   passingYear: user.passingYear,
-  cgpa: user.cgpa,
-  // Recruiter fields
+  cgpa:        user.cgpa,
+  domain:      user.domain,
   companyName: user.companyName,
   designation: user.designation,
-  createdAt: user.createdAt,
+  createdAt:   user.createdAt,
 })
 
-// @desc    Register user (student or recruiter only)
+// @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res, next) => {
   try {
     const {
       name, email, password, role, phone,
-      rollNumber, branch, passingYear, cgpa,
+      rollNumber, branch, passingYear, cgpa, domain,
       companyName, designation,
     } = req.body
 
-    // Only allow student and recruiter to self-register
     if (!['student', 'recruiter'].includes(role)) {
       return res.status(403).json({ message: 'Admin and TPO accounts must be created by system administrators.' })
     }
 
-    // Check existing user
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       return res.status(400).json({ message: 'Email already registered. Please sign in.' })
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    // Build user data
-    const userData = { name, email, password: hashedPassword, role, phone }
+    // ✅ Pass plain password — model pre('save') hook hashes it once
+    const userData = { name, email, password, role, phone }
 
     if (role === 'student') {
       if (!rollNumber) return res.status(400).json({ message: 'Roll number is required for students.' })
-      Object.assign(userData, { rollNumber, branch, passingYear, cgpa })
+      Object.assign(userData, { rollNumber, branch, passingYear, cgpa, domain })
     }
-
     if (role === 'recruiter') {
       if (!companyName) return res.status(400).json({ message: 'Company name is required for recruiters.' })
       Object.assign(userData, { companyName, designation })
@@ -66,7 +57,6 @@ export const register = async (req, res, next) => {
 
     const user = await User.create(userData)
     const token = generateToken(user._id)
-
     res.status(201).json({ token, user: sanitizeUser(user) })
   } catch (err) {
     next(err)
@@ -93,7 +83,7 @@ export const login = async (req, res, next) => {
       return res.status(403).json({ message: 'Your account has been deactivated.' })
     }
 
-    const isMatch = await bcrypt.compare(password, user.password)
+    const isMatch = await user.matchPassword(password)
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password.' })
     }

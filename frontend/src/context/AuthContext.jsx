@@ -1,60 +1,56 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import api from '../api'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext(null)
 
-// Configure axios defaults
-axios.defaults.baseURL = '/api'
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)
 
   const setAuthToken = (token) => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       localStorage.setItem('token', token)
     } else {
-      delete axios.defaults.headers.common['Authorization']
+      delete api.defaults.headers.common['Authorization']
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
     }
   }
 
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('token')
-    if (!token) {
-      setLoading(false)
-      return
-    }
+    if (!token) { setLoading(false); return }
     setAuthToken(token)
     try {
-      const res = await axios.get('/auth/me')
+      const res = await api.get('/auth/me')
       setUser(res.data.user)
     } catch {
       setAuthToken(null)
+      setUser(null)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    loadUser()
-  }, [loadUser])
+  useEffect(() => { loadUser() }, [loadUser])
 
   const login = async (email, password) => {
-    const res = await axios.post('/auth/login', { email, password })
+    const res = await api.post('/auth/login', { email, password })
     const { token, user } = res.data
     setAuthToken(token)
     setUser(user)
-    return user
+    localStorage.setItem('user', JSON.stringify(user))
+    return user  // ← LoginPage uses this to navigate
   }
 
   const register = async (formData) => {
-    const res = await axios.post('/auth/register', formData)
+    const res = await api.post('/auth/register', formData)
     const { token, user } = res.data
     setAuthToken(token)
     setUser(user)
+    localStorage.setItem('user', JSON.stringify(user))
     return user
   }
 

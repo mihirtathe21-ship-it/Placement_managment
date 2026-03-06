@@ -8,13 +8,13 @@ import api from '../../api'
 import toast from 'react-hot-toast'
 
 const TYPE_CONFIG = {
-  job_posted:         { icon: Briefcase,    color: 'text-navy-400',    bg: 'bg-navy-500/10' },
-  application_update: { icon: AlertCircle,  color: 'text-yellow-400',  bg: 'bg-yellow-500/10' },
-  shortlisted:        { icon: AlertCircle,  color: 'text-yellow-400',  bg: 'bg-yellow-500/10' },
-  selected:           { icon: Award,        color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  rejected:           { icon: X,            color: 'text-red-400',     bg: 'bg-red-500/10' },
-  drive_reminder:     { icon: Bell,         color: 'text-purple-400',  bg: 'bg-purple-500/10' },
-  general:            { icon: Info,         color: 'text-white/60',    bg: 'bg-white/5' },
+  job_posted:         { icon: Briefcase,   color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
+  application_update: { icon: AlertCircle, color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-100' },
+  shortlisted:        { icon: AlertCircle, color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-100' },
+  selected:           { icon: Award,       color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+  rejected:           { icon: X,           color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-100' },
+  drive_reminder:     { icon: Bell,        color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-100' },
+  general:            { icon: Info,        color: 'text-slate-500',   bg: 'bg-slate-100',  border: 'border-slate-200' },
 }
 
 export default function NotificationsPage() {
@@ -84,14 +84,15 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white">
+    <div className="min-h-screen bg-slate-50 text-[#1a2744]">
+
       {/* Header */}
-      <div className="border-b border-white/5 bg-[#0d1425]/80 backdrop-blur sticky top-0 z-20">
+      <div className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-xl font-bold text-white">Notifications</h1>
+            <h1 className="text-xl font-bold text-[#1a2744]">Notifications</h1>
             {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-[#1a2744] text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
                 {unreadCount}
               </span>
             )}
@@ -99,8 +100,10 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setUnreadOnly(!unreadOnly)}
-              className={`text-xs px-3 py-1.5 rounded-xl border transition-all ${
-                unreadOnly ? 'bg-navy-500/20 border-navy-500/30 text-navy-300' : 'bg-white/5 border-white/10 text-white/40'
+              className={`text-xs px-3 py-1.5 rounded-xl border font-medium transition-all ${
+                unreadOnly
+                  ? 'bg-[#1a2744] border-[#1a2744] text-white shadow-sm'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
               }`}
             >
               Unread only
@@ -108,7 +111,7 @@ export default function NotificationsPage() {
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
-                className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#1a2744] font-medium transition-colors"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 Mark all read
@@ -122,15 +125,17 @@ export default function NotificationsPage() {
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white/3 border border-white/5 rounded-2xl p-4 animate-pulse h-20" />
+              <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 animate-pulse h-20 shadow-sm" />
             ))}
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-24">
-            <BellOff className="w-12 h-12 text-white/10 mx-auto mb-4" />
-            <p className="text-white/40 font-medium">No notifications</p>
-            <p className="text-white/20 text-sm mt-1">
-              {unreadOnly ? 'You\'re all caught up!' : 'Notifications will appear here'}
+            <div className="w-16 h-16 bg-slate-100 border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <BellOff className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="text-slate-500 font-semibold text-base">No notifications</p>
+            <p className="text-slate-400 text-sm mt-1">
+              {unreadOnly ? "You're all caught up!" : 'Notifications will appear here'}
             </p>
           </div>
         ) : (
@@ -143,35 +148,37 @@ export default function NotificationsPage() {
                   key={notif._id}
                   className={`group relative flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${
                     !notif.isRead
-                      ? 'bg-white/5 border-white/10 hover:border-white/15'
-                      : 'bg-white/2 border-white/5 hover:border-white/8'
+                      ? 'bg-white border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md'
+                      : 'bg-slate-50 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-sm'
                   }`}
                   onClick={() => !notif.isRead && markRead(notif._id)}
                 >
                   {/* Unread dot */}
                   {!notif.isRead && (
-                    <div className="absolute top-4 right-12 w-2 h-2 rounded-full bg-navy-400" />
+                    <div className="absolute top-4 right-12 w-2 h-2 rounded-full bg-[#1a2744]" />
                   )}
 
                   {/* Icon */}
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${cfg.bg} ${cfg.border}`}>
                     <Icon className={`w-4 h-4 ${cfg.color}`} />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={`text-sm font-semibold leading-tight ${notif.isRead ? 'text-white/60' : 'text-white'}`}>
+                      <p className={`text-sm font-semibold leading-tight ${notif.isRead ? 'text-slate-400' : 'text-[#1a2744]'}`}>
                         {notif.title}
                       </p>
-                      <span className="text-xs text-white/30 shrink-0">{timeAgo(notif.createdAt)}</span>
+                      <span className="text-xs text-slate-400 shrink-0 font-medium">{timeAgo(notif.createdAt)}</span>
                     </div>
-                    <p className="text-xs text-white/40 mt-1 leading-relaxed">{notif.message}</p>
+                    <p className={`text-xs mt-1 leading-relaxed ${notif.isRead ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {notif.message}
+                    </p>
                     {notif.link && (
                       <Link
                         to={notif.link}
                         onClick={e => e.stopPropagation()}
-                        className="text-xs text-navy-400 hover:text-navy-300 mt-1.5 inline-block transition-colors"
+                        className="text-xs text-[#1a2744] hover:text-blue-600 mt-1.5 inline-block font-semibold transition-colors"
                       >
                         View details →
                       </Link>
@@ -182,7 +189,7 @@ export default function NotificationsPage() {
                   <button
                     onClick={e => { e.stopPropagation(); deleteNotification(notif._id) }}
                     disabled={deleting === notif._id}
-                    className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all shrink-0"
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0 disabled:opacity-40"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

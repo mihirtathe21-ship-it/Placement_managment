@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   Briefcase,
   FileText,
   CheckCircle2,
   AlertCircle,
-  ChevronRight,
-  ArrowUpRight,
+  User,
 } from "lucide-react";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
@@ -14,35 +12,23 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../api";
 import toast from "react-hot-toast";
 
-const STATUS = {
-  applied: {
-    text: "text-blue-700",
-    bg: "bg-blue-100 border-blue-200",
-  },
-  shortlisted: {
-    text: "text-yellow-700",
-    bg: "bg-yellow-100 border-yellow-200",
-  },
-  interview: {
-    text: "text-purple-700",
-    bg: "bg-purple-100 border-purple-200",
-  },
-  selected: {
-    text: "text-green-700",
-    bg: "bg-green-100 border-green-200",
-  },
-  rejected: {
-    text: "text-red-700",
-    bg: "bg-red-100 border-red-200",
-  },
-};
-
 export default function StudentDashboard() {
   const { user } = useAuth();
 
   const [jobs, setJobs] = useState([]);
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showEdit, setShowEdit] = useState(false);
+
+  const [profile, setProfile] = useState({
+    prn: user?.prn || "",
+    dob: user?.dob || "",
+    address: user?.address || "",
+    resume: null,
+    photo: null,
+  });
+
+  const [preview, setPreview] = useState(user?.photo || "");
 
   useEffect(() => {
     Promise.all([
@@ -71,221 +57,259 @@ export default function StudentDashboard() {
       ? "text-yellow-600"
       : "text-red-600";
 
+  // INPUT CHANGE (PRN FIXED)
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    // 🔥 PRN: only numbers, max 9 digits
+    if (name === "prn") {
+      const val = value.replace(/\D/g, "");
+      if (val.length <= 9) {
+        setProfile({ ...profile, prn: val });
+      }
+      return;
+    }
+
+    setProfile({ ...profile, [name]: value });
+  };
+
+  // FILE UPLOAD
+  const handleFile = (e) => {
+    const { name, files } = e.target;
+    const file = files[0];
+
+    if (name === "photo") {
+      if (file.size > 2 * 1024 * 1024) {
+        return toast.error("Image must be < 2MB");
+      }
+      setPreview(URL.createObjectURL(file));
+    }
+
+    setProfile({ ...profile, [name]: file });
+  };
+
+  // SAVE PROFILE (PRN VALIDATION FIXED)
+  const handleSave = async () => {
+    if (!/^[0-9]{9}$/.test(profile.prn)) {
+      return toast.error("PRN must be exactly 9 digits");
+    }
+
+    const age =
+      new Date().getFullYear() - new Date(profile.dob).getFullYear();
+
+    if (age < 16) {
+      return toast.error("Minimum age is 16");
+    }
+
+    try {
+      const formData = new FormData();
+      Object.keys(profile).forEach((key) => {
+        if (profile[key]) formData.append(key, profile[key]);
+      });
+
+      await api.put("/users/profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Profile updated successfully");
+    } catch {
+      toast.error("Update failed");
+    }
+  };
+
+  const getProfileCompletion = () => {
+    const fields = ["prn", "dob", "address"];
+    let filled = fields.filter((f) => profile[f]).length;
+    if (preview) filled++;
+    return Math.round((filled / 4) * 100);
+  };
+
   return (
     <DashboardLayout>
-      <div className="bg-gray-100 min-h-screen p-6 lg:p-8">
+      <div className="bg-gray-100 min-h-screen p-6">
         <div className="max-w-6xl mx-auto space-y-8">
 
-          {/* Header */}
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Welcome back,{" "}
-                <span className="text-blue-600">
-                  {user?.name?.split(" ")[0]}
-                </span>{" "}
-                👋
-              </h1>
+          {/* HEADER */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
 
-              <p className="text-gray-500 text-sm mt-1">
-                {user?.branch} • {user?.passingYear} Batch • Roll:{" "}
-                {user?.rollNumber}
-              </p>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Welcome back,{" "}
+                  <span className="text-blue-600">
+                    {user?.name?.split(" ")[0]}
+                  </span>{" "}
+                  👋
+                </h1>
+
+                <p className="text-gray-500 text-sm">
+                  {user?.branch} • {user?.passingYear} • Roll: {user?.rollNumber}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowEdit(!showEdit)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+              >
+                {showEdit ? "Close" : "Edit Profile"}
+              </button>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl px-6 py-3 shadow-sm text-center">
-              <p className={`text-2xl font-bold ${cgpaColor}`}>
+            <div className="bg-white border rounded-xl px-6 py-3 text-center shadow-sm">
+              <p className={`text-xl font-bold ${cgpaColor}`}>
                 {user?.cgpa ?? "-"}
               </p>
               <p className="text-xs text-gray-500">CGPA</p>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              {
-                label: "Applied",
-                val: apps.length,
-                icon: FileText,
-                color: "blue",
-              },
-              {
-                label: "Shortlisted",
-                val: counts.shortlisted || 0,
-                icon: AlertCircle,
-                color: "yellow",
-              },
-              {
-                label: "Selected",
-                val: counts.selected || 0,
-                icon: CheckCircle2,
-                color: "green",
-              },
-              {
-                label: "Active Drives",
-                val: jobs.length,
-                icon: Briefcase,
-                color: "blue",
-              },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition"
-              >
-                <div
-                  className={`w-10 h-10 rounded-lg bg-${s.color}-100 flex items-center justify-center mb-3`}
-                >
-                  <s.icon className={`w-5 h-5 text-${s.color}-600`} />
+          {/* EDIT PROFILE */}
+          {showEdit && (
+            <div className="bg-white border rounded-xl p-6 shadow-sm">
+              <h2 className="font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <User size={18} /> Edit Profile
+              </h2>
+
+              {/* Progress */}
+              <div className="mb-6">
+                <div className="flex justify-between text-xs mb-1 text-gray-500">
+                  <span>Profile Completion</span>
+                  <span>{getProfileCompletion()}%</span>
+                </div>
+                <div className="bg-gray-200 h-2 rounded-full">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full"
+                    style={{ width: `${getProfileCompletion()}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+
+                {/* LEFT */}
+                <div className="space-y-5">
+
+                  <div>
+                    <label className="text-sm text-gray-600">PRN</label>
+                    <input
+                      name="prn"
+                      value={profile.prn}
+                      onChange={handleChange}
+                      placeholder="Enter 9-digit PRN"
+                      className="w-full border rounded-lg p-3 mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-600">DOB</label>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={profile.dob}
+                      onChange={handleChange}
+                      className="w-full border rounded-lg p-3 mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-600">Address</label>
+                    <textarea
+                      name="address"
+                      value={profile.address}
+                      onChange={handleChange}
+                      className="w-full border rounded-lg p-3 mt-1"
+                    />
+                  </div>
+
+                  {/* Resume */}
+                  <div>
+                    <label className="text-sm text-gray-600 block mb-2">
+                      Resume (PDF)
+                    </label>
+
+                    <label className="flex justify-between items-center border rounded-lg p-3 cursor-pointer">
+                      <span className="text-sm text-gray-500">
+                        {profile.resume ? profile.resume.name : "Upload Resume"}
+                      </span>
+                      <span className="text-blue-600 text-sm">Browse</span>
+
+                      <input
+                        type="file"
+                        name="resume"
+                        accept="application/pdf"
+                        onChange={handleFile}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {profile.resume && (
+                      <button
+                        onClick={() =>
+                          window.open(URL.createObjectURL(profile.resume))
+                        }
+                        className="text-blue-600 text-sm mt-2 underline"
+                      >
+                        View Resume
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <p className="text-xl font-bold text-gray-800">
-                  {loading ? "-" : s.val}
-                </p>
+                {/* RIGHT */}
+                <div className="flex flex-col items-center gap-5">
 
+                  <div className="w-32 h-32 rounded-full overflow-hidden border">
+                    {preview ? (
+                      <img
+                        src={preview}
+                        className="w-full h-full object-cover"
+                        alt=""
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-400">
+                        No Photo
+                      </div>
+                    )}
+                  </div>
+
+                  <label className="text-blue-600 cursor-pointer">
+                    Upload Photo
+                    <input
+                      type="file"
+                      name="photo"
+                      accept="image/*"
+                      onChange={handleFile}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <button
+                    onClick={handleSave}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+                  >
+                    Save Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STATS */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "Applied", val: apps.length, icon: FileText, color: "blue" },
+              { label: "Shortlisted", val: counts.shortlisted || 0, icon: AlertCircle, color: "yellow" },
+              { label: "Selected", val: counts.selected || 0, icon: CheckCircle2, color: "green" },
+              { label: "Active Drives", val: jobs.length, icon: Briefcase, color: "blue" },
+            ].map((s) => (
+              <div key={s.label} className="bg-white border rounded-xl p-5 shadow-sm">
+                <div className={`w-10 h-10 bg-${s.color}-100 rounded-lg flex items-center justify-center mb-3`}>
+                  <s.icon className={`w-5 h-5 text-${s.color}-600`} />
+                </div>
+                <p className="text-xl font-bold">{loading ? "-" : s.val}</p>
                 <p className="text-sm text-gray-500">{s.label}</p>
               </div>
             ))}
-          </div>
-
-          {/* Grid */}
-          <div className="grid lg:grid-cols-2 gap-6">
-
-            {/* Active Drives */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold text-gray-800">
-                  Active Drives
-                </h2>
-
-                <Link
-                  to="/jobs"
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  All jobs <ChevronRight size={16} />
-                </Link>
-              </div>
-
-              {jobs.length === 0 ? (
-                <p className="text-gray-400 text-sm text-center py-8">
-                  No active drives available
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {jobs.map((job) => (
-                    <Link
-                      key={job._id}
-                      to="/jobs"
-                      className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition"
-                    >
-                      <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-semibold">
-                        {job.company?.charAt(0)}
-                      </div>
-
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-800">
-                          {job.title}
-                        </p>
-
-                        <p className="text-xs text-gray-500">
-                          {job.company} •{" "}
-                          {job.package || job.stipend || "TBD"}
-                        </p>
-                      </div>
-
-                      <ArrowUpRight
-                        size={18}
-                        className="text-gray-400"
-                      />
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Applications */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold text-gray-800">
-                  My Applications
-                </h2>
-
-                <Link
-                  to="/applications"
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  View all <ChevronRight size={16} />
-                </Link>
-              </div>
-
-              {apps.length === 0 ? (
-                <p className="text-gray-400 text-sm text-center py-8">
-                  No applications yet
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {apps.slice(0, 5).map((app) => {
-                    const s = STATUS[app.status];
-
-                    return (
-                      <div
-                        key={app._id}
-                        className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg"
-                      >
-                        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center font-semibold text-gray-700">
-                          {app.job?.company?.charAt(0)}
-                        </div>
-
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-800">
-                            {app.job?.title}
-                          </p>
-
-                          <p className="text-xs text-gray-500">
-                            {app.job?.company}
-                          </p>
-                        </div>
-
-                        <span
-                          className={`text-xs px-3 py-1 rounded-lg border font-medium ${s?.bg} ${s?.text}`}
-                        >
-                          {app.status}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Profile */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">
-              Profile Information
-            </h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "Branch", val: user?.branch || "-" },
-                { label: "Passing Year", val: user?.passingYear || "-" },
-                { label: "CGPA", val: user?.cgpa ?? "-" },
-                { label: "Roll Number", val: user?.rollNumber || "-" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="bg-white border border-gray-200 rounded-lg p-3"
-                >
-                  <p className="text-xs text-gray-500">
-                    {item.label}
-                  </p>
-
-                  <p className="text-sm font-semibold text-gray-800">
-                    {item.val}
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
 
         </div>

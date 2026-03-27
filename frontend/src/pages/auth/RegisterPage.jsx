@@ -4,7 +4,7 @@ import { Eye, EyeOff, GraduationCap, Building2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import logo from '../../assets/logo.png'
-
+ 
 const DOMAINS = [
   'Full Stack Development','Frontend Development','Backend Development',
   'Data Analytics','Data Science','Machine Learning','Artificial Intelligence',
@@ -12,12 +12,11 @@ const DOMAINS = [
   '.NET Development','Java Development','Python Development',
   'Embedded Systems','Networking','Database Administration','Other',
 ]
-
 const BRANCHES = [
   'Computer Science','Information Technology','Electronics',
   'Mechanical','Civil','Electrical','Chemical','Biotechnology','Other',
 ]
-
+ 
 export default function RegisterPage() {
   const navigate = useNavigate()
   const { register } = useAuth()
@@ -27,11 +26,12 @@ export default function RegisterPage() {
     name: '', email: '', password: '', phone: '',
     role: 'student',
     rollNumber: '', branch: '', passingYear: '', cgpa: '', domain: '',
+    hasBacklog: false, backlogCount: '',
     companyName: '', designation: '',
   })
-
+ 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }))
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.name || !form.email || !form.password) {
@@ -42,9 +42,22 @@ export default function RegisterPage() {
       toast.error('Password must be at least 6 characters')
       return
     }
+    if (form.role === 'student' && form.hasBacklog) {
+      const count = parseInt(form.backlogCount, 10)
+      if (!form.backlogCount || isNaN(count) || count < 1) {
+        toast.error('Please enter a valid backlog count (minimum 1)')
+        return
+      }
+    }
     setLoading(true)
     try {
-      await register(form)
+      const payload = {
+        ...form,
+        backlogs: form.role === 'student'
+          ? (form.hasBacklog ? parseInt(form.backlogCount, 10) : 0)
+          : undefined,
+      }
+      await register(payload)
       toast.success('Account created successfully!')
       navigate('/')
     } catch (err) {
@@ -53,21 +66,18 @@ export default function RegisterPage() {
       setLoading(false)
     }
   }
-
+ 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap');
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
           font-family: 'Inter', sans-serif;
           background: #f4f6fb;
           color: #1a1a2e;
           min-height: 100vh;
         }
-
         /* ── NAVBAR ── */
         .navbar {
           display: flex; align-items: center;
@@ -79,14 +89,12 @@ export default function RegisterPage() {
         .nb-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
         .nb-brand-title { font-size: .88rem; font-weight: 700; color: #1a1a2e; line-height: 1.2; }
         .nb-brand-sub { font-size: .62rem; color: #8896a8; }
-
         /* ── PAGE ── */
         .page {
           min-height: calc(100vh - 60px);
           display: flex; align-items: flex-start; justify-content: center;
           padding: 2.5rem 1.5rem 3rem;
         }
-
         /* ── CARD ── */
         .card {
           width: 100%; max-width: 600px;
@@ -96,7 +104,6 @@ export default function RegisterPage() {
           padding: 2.4rem 2.2rem;
           box-shadow: 0 2px 8px rgba(0,0,0,0.05), 0 16px 48px rgba(0,0,0,0.08);
         }
-
         /* ── Header ── */
         .card-header { text-align: center; margin-bottom: 1.8rem; }
         .card-title {
@@ -104,7 +111,6 @@ export default function RegisterPage() {
           font-size: 1.5rem; font-weight: 900; color: #1a1a2e; margin-bottom: .25rem;
         }
         .card-sub { font-size: .78rem; color: #8896a8; }
-
         /* ── Role selector ── */
         .role-label {
           font-size: .7rem; font-weight: 700; color: #8896a8;
@@ -121,7 +127,6 @@ export default function RegisterPage() {
         }
         .role-btn:hover { border-color: #1a3c6e; color: #1a3c6e; background: #f0f4fa; }
         .role-btn.active { border-color: #1a3c6e; background: #eef3fa; color: #1a3c6e; }
-
         /* ── Section divider ── */
         .section-divider {
           border: none; border-top: 1px solid #eef1f6;
@@ -131,11 +136,9 @@ export default function RegisterPage() {
           font-size: .68rem; font-weight: 700; color: #aab4c0;
           text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1rem;
         }
-
         /* ── Grid helpers ── */
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-bottom: .9rem; }
         .grid1 { margin-bottom: .9rem; }
-
         /* ── Field ── */
         .lbl {
           display: block; font-size: .72rem; font-weight: 600;
@@ -162,7 +165,6 @@ export default function RegisterPage() {
           color: #b0bec8; display: flex; align-items: center; transition: color .18s;
         }
         .eye-btn:hover { color: #445; }
-
         /* ── Domain chips ── */
         .domain-lbl {
           font-size: .72rem; font-weight: 600; color: #556;
@@ -180,7 +182,92 @@ export default function RegisterPage() {
         .domain-chip:hover { border-color: #1a3c6e; color: #1a3c6e; background: #f0f4fa; }
         .domain-chip.selected { border-color: #1a3c6e; background: #eef3fa; color: #1a3c6e; font-weight: 700; }
         .domain-hint { font-size: .68rem; color: #b0bec8; margin-top: .2rem; }
-
+ 
+        /* ── Backlog section — now uses standard blue/gray theme ── */
+        .backlog-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: .75rem 1rem;
+          border: 1.5px solid #dde3ec;       /* same as .inp */
+          border-radius: 10px;
+          background: #f8fafc;               /* same as .inp */
+          margin-bottom: .9rem;
+          transition: border-color .18s, background .18s;
+        }
+        .backlog-row.active {
+          border-color: #1a3c6e;             /* blue on active, same as .inp:focus */
+          background: #eef3fa;               /* same as .role-btn.active */
+        }
+        .backlog-row-left { display: flex; flex-direction: column; gap: .12rem; }
+        .backlog-row-title { font-size: .82rem; font-weight: 600; color: #1a1a2e; }
+        .backlog-row-sub { font-size: .7rem; color: #8896a8; }
+ 
+        /* Toggle switch */
+        .toggle-wrap { display: flex; align-items: center; gap: .6rem; }
+        .toggle-label-no  { font-size: .75rem; font-weight: 600; color: #aab4c0; }
+        .toggle-label-yes { font-size: .75rem; font-weight: 600; color: #1a3c6e; } /* blue */
+        .toggle {
+          position: relative; width: 42px; height: 24px; cursor: pointer;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-track {
+          position: absolute; inset: 0;
+          background: #dde3ec;              /* gray when off */
+          border-radius: 99px;
+          transition: background .2s;
+        }
+        .toggle input:checked + .toggle-track { background: #1a3c6e; } /* blue when on */
+        .toggle-thumb {
+          position: absolute; top: 3px; left: 3px;
+          width: 18px; height: 18px;
+          background: #fff;
+          border-radius: 50%;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+          transition: transform .2s;
+        }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+ 
+        /* Backlog count reveal */
+        .backlog-count-wrap {
+          margin-top: -.3rem;
+          margin-bottom: .9rem;
+          animation: slideDown .2s ease;
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .backlog-count-inner {
+          display: flex; align-items: center; gap: .75rem;
+          padding: .75rem 1rem;
+          border: 1.5px solid #1a3c6e;      /* blue border, matches active row */
+          border-top: none;
+          border-radius: 0 0 10px 10px;
+          background: #eef3fa;              /* same light blue as active row */
+        }
+        .backlog-count-lbl {
+          font-size: .78rem; font-weight: 600;
+          color: #1a3c6e;                   /* blue label */
+          white-space: nowrap;
+        }
+        .inp-backlog-count {
+          width: 90px;
+          padding: .5rem .75rem;
+          border: 1.5px solid #dde3ec;      /* standard border */
+          border-radius: 8px;
+          font-size: .83rem; font-family: 'Inter', sans-serif;
+          color: #1a1a2e; background: #fff;
+          outline: none;
+          transition: border-color .18s, box-shadow .18s;
+        }
+        .inp-backlog-count:focus {
+          border-color: #1a3c6e;            /* blue focus, same as .inp:focus */
+          box-shadow: 0 0 0 3px rgba(26,60,110,0.09);
+        }
+        .backlog-warning {
+          font-size: .69rem; color: #8896a8; /* neutral gray */
+          display: flex; align-items: center; gap: .3rem;
+        }
+ 
         /* ── Submit ── */
         .btn-submit {
           width: 100%; padding: .8rem; margin-top: .8rem;
@@ -196,17 +283,15 @@ export default function RegisterPage() {
         .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
         .spinner { width: 17px; height: 17px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         .signin-row { text-align: center; font-size: .77rem; color: #8896a8; margin-top: 1rem; }
         .signin-row a { color: #1a3c6e; font-weight: 600; text-decoration: none; }
         .signin-row a:hover { text-decoration: underline; }
-
         @media (max-width: 540px) {
           .grid2 { grid-template-columns: 1fr; }
           .card { padding: 1.8rem 1.2rem; }
         }
       `}</style>
-
+ 
       {/* ── NAVBAR ── */}
       <nav className="navbar">
         <a href="/" className="nb-brand">
@@ -217,19 +302,15 @@ export default function RegisterPage() {
           </div>
         </a>
       </nav>
-
+ 
       {/* ── PAGE ── */}
       <div className="page">
         <div className="card">
-
-          {/* Header */}
           <div className="card-header">
             <h2 className="card-title">Create Account</h2>
             <p className="card-sub">Join the RCPIT Placement Portal</p>
           </div>
-
           <form onSubmit={handleSubmit}>
-
             {/* Role */}
             <span className="role-label">I am a</span>
             <div className="role-grid">
@@ -246,7 +327,7 @@ export default function RegisterPage() {
                 </button>
               ))}
             </div>
-
+ 
             {/* Basic info */}
             <div className="grid2">
               <div>
@@ -260,7 +341,6 @@ export default function RegisterPage() {
                   onChange={e => set('email', e.target.value)} className="inp" required />
               </div>
             </div>
-
             <div className="grid2">
               <div>
                 <label className="lbl">Password *</label>
@@ -283,13 +363,12 @@ export default function RegisterPage() {
                   onChange={e => set('phone', e.target.value)} className="inp" />
               </div>
             </div>
-
+ 
             {/* ── Student fields ── */}
             {form.role === 'student' && (
               <>
                 <hr className="section-divider" />
                 <p className="section-heading">Academic Details</p>
-
                 <div className="grid2">
                   <div>
                     <label className="lbl">Roll Number</label>
@@ -307,7 +386,7 @@ export default function RegisterPage() {
                     <label className="lbl">Passing Year</label>
                     <select value={form.passingYear} onChange={e => set('passingYear', e.target.value)} className="inp">
                       <option value="">Select year</option>
-                      {[2024,2025,2026,2027,2028].map(y => <option key={y} value={y}>{y}</option>)}
+                      {[2026,2027,2028,2029,2030].map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
                   <div>
@@ -316,7 +395,20 @@ export default function RegisterPage() {
                       value={form.cgpa} onChange={e => set('cgpa', e.target.value)} className="inp" />
                   </div>
                 </div>
-
+               {/* ── Backlog fields ── */}
+                <div className="grid1">
+                <label className="lbl">Number of Backlogs</label>
+                <input
+                type="number"
+                min="0"
+                max="20"
+                placeholder="Enter 0 if none"
+                value={form.backlogCount}
+                onChange={e => set('backlogCount', e.target.value)}
+                className="inp"/>
+              </div>
+               {/* ── Backlog fields end ── */}
+ 
                 <div className="grid1">
                   <label className="domain-lbl">
                     Specialization Domain
@@ -337,7 +429,7 @@ export default function RegisterPage() {
                 </div>
               </>
             )}
-
+ 
             {/* ── Recruiter fields ── */}
             {form.role === 'recruiter' && (
               <>
@@ -357,15 +449,13 @@ export default function RegisterPage() {
                 </div>
               </>
             )}
-
+ 
             <button type="submit" disabled={loading} className="btn-submit">
               {loading ? <div className="spinner" /> : 'Create Account'}
             </button>
-
             <p className="signin-row">
               Already have an account? <Link to="/">Sign in</Link>
             </p>
-
           </form>
         </div>
       </div>

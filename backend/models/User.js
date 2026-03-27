@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema(
     branch:       { type: String, default: '' },
     passingYear:  { type: Number },
     cgpa:         { type: Number, min: 0, max: 10 },
-    backlogs:     { type: Number, default: 0 },
+    hasBacklog:   { type: Boolean, default: false },   // ← NEW: toggle state
+    backlogs:     { type: Number, default: 0 },        // count of active backlogs
     domain:       { type: String, default: '' },
 
     // Recruiter / TPO fields

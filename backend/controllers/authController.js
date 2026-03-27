@@ -17,6 +17,8 @@ const sanitizeUser = (user) => ({
   branch:      user.branch,
   passingYear: user.passingYear,
   cgpa:        user.cgpa,
+  hasBacklog:  user.hasBacklog,   // ← NEW
+  backlogs:    user.backlogs,     // ← NEW
   domain:      user.domain,
   companyName: user.companyName,
   designation: user.designation,
@@ -31,6 +33,7 @@ export const register = async (req, res, next) => {
     const {
       name, email, password, role, phone,
       rollNumber, branch, passingYear, cgpa, domain,
+      hasBacklog, backlogs,                           // ← NEW
       companyName, designation,
     } = req.body
 
@@ -43,13 +46,21 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ message: 'Email already registered. Please sign in.' })
     }
 
-    // ✅ Pass plain password — model pre('save') hook hashes it once
     const userData = { name, email, password, role, phone }
 
     if (role === 'student') {
       if (!rollNumber) return res.status(400).json({ message: 'Roll number is required for students.' })
-      Object.assign(userData, { rollNumber, branch, passingYear, cgpa, domain })
+      Object.assign(userData, {
+        rollNumber,
+        branch,
+        passingYear,
+        cgpa,
+        domain,
+        hasBacklog: hasBacklog ?? false,              // ← NEW
+        backlogs:   hasBacklog ? (backlogs ?? 0) : 0, // ← NEW: force 0 if no backlog
+      })
     }
+
     if (role === 'recruiter') {
       if (!companyName) return res.status(400).json({ message: 'Company name is required for recruiters.' })
       Object.assign(userData, { companyName, designation })

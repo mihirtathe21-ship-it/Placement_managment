@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
     setAuthToken(token)
     setUser(user)
     localStorage.setItem('user', JSON.stringify(user))
-    return user  // ← LoginPage uses this to navigate
+    return user
   }
 
   const register = async (formData) => {
@@ -60,8 +60,17 @@ export function AuthProvider({ children }) {
     toast.success('Logged out successfully')
   }
 
+  // ✅ NEW — call this after any profile update to sync UI without re-fetching
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...updatedFields }
+      localStorage.setItem('user', JSON.stringify(merged))
+      return merged
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

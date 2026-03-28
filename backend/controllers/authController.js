@@ -7,6 +7,7 @@ const generateToken = (id) => {
   })
 }
 
+// ✅ Added prn, dob, address, photo, resume
 const sanitizeUser = (user) => ({
   _id:         user._id,
   name:        user.name,
@@ -17,12 +18,18 @@ const sanitizeUser = (user) => ({
   branch:      user.branch,
   passingYear: user.passingYear,
   cgpa:        user.cgpa,
-  hasBacklog:  user.hasBacklog,   // ← NEW
-  backlogs:    user.backlogs,     // ← NEW
+  hasBacklog:  user.hasBacklog,
+  backlogs:    user.backlogs,
   domain:      user.domain,
   companyName: user.companyName,
   designation: user.designation,
   createdAt:   user.createdAt,
+  // ✅ Profile fields — these were missing, causing data to vanish on refresh
+  prn:         user.prn,
+  dob:         user.dob,
+  address:     user.address,
+  photo:       user.photo,
+  resume:      user.resume,
 })
 
 // @desc    Register user
@@ -33,7 +40,7 @@ export const register = async (req, res, next) => {
     const {
       name, email, password, role, phone,
       rollNumber, branch, passingYear, cgpa, domain,
-      hasBacklog, backlogs,                           // ← NEW
+      hasBacklog, backlogs,
       companyName, designation,
     } = req.body
 
@@ -56,8 +63,8 @@ export const register = async (req, res, next) => {
         passingYear,
         cgpa,
         domain,
-        hasBacklog: hasBacklog ?? false,              // ← NEW
-        backlogs:   hasBacklog ? (backlogs ?? 0) : 0, // ← NEW: force 0 if no backlog
+        hasBacklog: hasBacklog ?? false,
+        backlogs:   hasBacklog ? (backlogs ?? 0) : 0,
       })
     }
 
@@ -89,7 +96,6 @@ export const login = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' })
     }
-
     if (!user.isActive) {
       return res.status(403).json({ message: 'Your account has been deactivated.' })
     }
@@ -111,7 +117,10 @@ export const login = async (req, res, next) => {
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    res.json({ user: sanitizeUser(req.user) })
+    // Re-fetch from DB to get the absolute latest data including profile fields
+    const user = await User.findById(req.user._id)
+    if (!user) return res.status(404).json({ message: 'User not found' })
+    res.json({ user: sanitizeUser(user) })
   } catch (err) {
     next(err)
   }

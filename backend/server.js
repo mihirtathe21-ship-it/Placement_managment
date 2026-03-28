@@ -3,6 +3,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import connectDB from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -15,10 +17,14 @@ import studentRoutes from './routes/studentRoutes.js'
 
 dotenv.config()
 
+// ── __dirname shim for ES modules ─────────────────────────────────────────────
+const __filename = fileURLToPath(import.meta.url)
+const __dirname  = path.dirname(__filename)
+
 const app = express()
 const httpServer = createServer(app)
 
-// Socket.io setup for real-time notifications
+// ── Socket.io — real-time notifications ───────────────────────────────────────
 export const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -47,7 +53,7 @@ io.on('connection', (socket) => {
   })
 })
 
-// Helper to send real-time notification to a user
+// Helper to send real-time notification to a specific user
 export const sendRealtimeNotification = (userId, notification) => {
   const socketId = onlineUsers.get(userId.toString())
   if (socketId) {
@@ -55,27 +61,32 @@ export const sendRealtimeNotification = (userId, notification) => {
   }
 }
 
-// Middleware
+// ── Core middleware ───────────────────────────────────────────────────────────
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
-app.use(express.json({ limit: '50mb' }))                        // ← FIXED
-app.use(express.urlencoded({ limit: '50mb', extended: true }))  // ← ADDED
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
-// Connect to MongoDB
+// ── Static files — serve uploaded photos & resumes ✅ NEW ────────────────────
+// Files saved by multer land in <project-root>/uploads/
+// Frontend can access them at:  http://localhost:5000/uploads/<filename>
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+
+// ── Connect to MongoDB ────────────────────────────────────────────────────────
 connectDB()
 
-// Routes
-app.use('/api/auth', authRoutes)
-app.use('/api/users', userRoutes)
-app.use('/api/jobs', jobRoutes)
-app.use('/api/applications', applicationRoutes)
-app.use('/api/analytics', analyticsRoutes)
+// ── API routes ────────────────────────────────────────────────────────────────
+app.use('/api/auth',          authRoutes)
+app.use('/api/users',         userRoutes)
+app.use('/api/jobs',          jobRoutes)
+app.use('/api/applications',  applicationRoutes)
+app.use('/api/analytics',     analyticsRoutes)
 app.use('/api/notifications', notificationRoutes)
-app.use('/api/students', studentRoutes)
+app.use('/api/students',      studentRoutes)
 
-// Health check
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.json({ message: '🚀 PlaceNext API is running' }))
 
-// Error handler (must be last)
+// ── Global error handler (must be last) ──────────────────────────────────────
 app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000

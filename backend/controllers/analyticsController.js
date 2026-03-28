@@ -46,26 +46,24 @@ export const getSummary = async (req, res, next) => {
 // @access  Admin + TPO
 export const getByBranch = async (req, res, next) => {
   try {
-    const data = await Application.aggregate([
-      { $match: { status: 'selected' } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'student',
-          foreignField: '_id',
-          as: 'studentData',
-        },
-      },
-      { $unwind: '$studentData' },
-      {
-        $group: {
-          _id: '$studentData.branch',
-          placed: { $sum: 1 },
-          avgPackage: { $avg: { $toDouble: { $replaceAll: { input: { $ifNull: ['$offeredPackage', '0'] }, find: '[^0-9.]', replacement: '' } } } },
-        },
-      },
-      { $sort: { placed: -1 } },
-    ])
+    const applications = await Application.find({ status: 'selected' }).populate('student', 'branch')
+
+    const branchStats = {}
+    applications.forEach(app => {
+      const branch = app.student?.branch || 'Unknown'
+      const offeredRaw = app.offeredPackage || ''
+      const offerNumber = Number((offeredRaw.toString().replace(/[^0-9.]/g, '') || '0')) || 0
+
+      if (!branchStats[branch]) {
+        branchStats[branch] = {
+          placed: 0,
+          totalPackage: 0,
+        }
+      }
+
+      branchStats[branch].placed += 1
+      branchStats[branch].totalPackage += offerNumber
+    })
 
     // Add total students per branch
     const students = await User.aggregate([
@@ -75,12 +73,15 @@ export const getByBranch = async (req, res, next) => {
     const studentMap = {}
     students.forEach(s => { studentMap[s._id] = s.total })
 
-    const result = data.map(d => ({
-      branch: d._id || 'Unknown',
-      placed: d.placed,
-      total: studentMap[d._id] || 0,
-      rate: studentMap[d._id] ? ((d.placed / studentMap[d._id]) * 100).toFixed(1) : 0,
-    }))
+    const result = Object.entries(branchStats)
+      .map(([branch, stats]) => ({
+        branch,
+        placed: stats.placed,
+        total: studentMap[branch] || 0,
+        rate: studentMap[branch] ? ((stats.placed / studentMap[branch]) * 100).toFixed(1) : 0,
+        avgPackage: stats.placed > 0 ? Number((stats.totalPackage / stats.placed).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => b.placed - a.placed)
 
     res.json({ data: result })
   } catch (err) {

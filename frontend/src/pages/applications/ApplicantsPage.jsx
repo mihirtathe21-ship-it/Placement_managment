@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ChevronLeft, User, Mail, Phone, GraduationCap,
-  CheckCircle2, XCircle, Clock, AlertCircle, Star, Download
+  ChevronLeft, User, GraduationCap,
+  CheckCircle2, XCircle, Clock, AlertCircle, Star
 } from 'lucide-react'
 import api from '../../api'
 import toast from 'react-hot-toast'
+import StudentProfileModal from '../../components/ui/StudentProfileModal'
 
 const STATUSES = ['applied', 'shortlisted', 'interview', 'selected', 'rejected']
 
@@ -29,22 +30,28 @@ const STATUS_ACTIVE = {
 export default function ApplicantsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [applications, setApplications] = useState([])
-  const [job, setJob] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [filterStatus, setFilterStatus] = useState('')
-  const [updating, setUpdating] = useState(null)
-  const [selectedApp, setSelectedApp] = useState(null)
-  const [newStatus, setNewStatus] = useState('')
-  const [noteText, setNoteText] = useState('')
-  const [packageText, setPackageText] = useState('')
+
+  const [applications, setApplications]   = useState([])
+  const [job, setJob]                     = useState(null)
+  const [loading, setLoading]             = useState(true)
+  const [filterStatus, setFilterStatus]   = useState('')
+  const [updating, setUpdating]           = useState(null)
+  const [selectedApp, setSelectedApp]     = useState(null)   // for status update modal
+  const [newStatus, setNewStatus]         = useState('')
+  const [noteText, setNoteText]           = useState('')
+  const [packageText, setPackageText]     = useState('')
+
+  // ── NEW: profile modal state ──────────────────────────────────────────────
+  const [profileStudent, setProfileStudent] = useState(null)
 
   const fetchData = async () => {
     setLoading(true)
     try {
       const [jobRes, appsRes] = await Promise.all([
         api.get(`/jobs/${id}`),
-        api.get(`/jobs/${id}/applicants`, { params: filterStatus ? { status: filterStatus } : {} }),
+        api.get(`/jobs/${id}/applicants`, {
+          params: filterStatus ? { status: filterStatus } : {},
+        }),
       ])
       setJob(jobRes.data.job)
       setApplications(appsRes.data.applications)
@@ -87,6 +94,14 @@ export default function ApplicantsPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-slate-800">
 
+      {/* ── Student Profile Modal ── */}
+      {profileStudent && (
+        <StudentProfileModal
+          student={profileStudent}
+          onClose={() => setProfileStudent(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
@@ -100,7 +115,10 @@ export default function ApplicantsPage() {
             <h1 className="text-xl font-bold text-[#1a2744]">
               {job ? `${job.company} — ${job.title}` : 'Applicants'}
             </h1>
-            <p className="text-slate-400 text-xs mt-0.5">{applications.length} applicants</p>
+            <p className="text-slate-400 text-xs mt-0.5">
+              {applications.length} applicants ·{' '}
+              <span className="text-blue-500 font-medium">Click a name to view full profile</span>
+            </p>
           </div>
         </div>
       </div>
@@ -129,7 +147,7 @@ export default function ApplicantsPage() {
                   : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
               }`}
             >
-              {s.charAt(0).toUpperCase() + s.slice(1)} {counts[s] ? `(${counts[s]})` : ''}
+              {s.charAt(0).toUpperCase() + s.slice(1)}{counts[s] ? ` (${counts[s]})` : ''}
             </button>
           ))}
         </div>
@@ -155,32 +173,49 @@ export default function ApplicantsPage() {
                   <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 hidden sm:table-cell uppercase tracking-wide">Branch</th>
                   <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 hidden md:table-cell uppercase tracking-wide">CGPA</th>
                   <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 uppercase tracking-wide">Status</th>
+                  {/* ── NEW column ── */}
+                  <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 uppercase tracking-wide">Profile</th>
                   <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {applications.map(app => (
                   <tr key={app._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-4">
-                      <div>
-                        <p className="text-sm font-semibold text-[#1a2744]">{app.student?.name}</p>
-                        <p className="text-xs text-slate-400">{app.student?.email}</p>
-                        {app.student?.rollNumber && (
-                          <p className="text-xs text-slate-300">{app.student.rollNumber}</p>
-                        )}
+
+                    {/* Name — clickable to open profile */}
+                    <td
+                      className="px-5 py-4 cursor-pointer"
+                      onClick={() => setProfileStudent(app.student)}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
+                          {app.student?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#1a2744] hover:text-blue-600 transition-colors leading-tight">
+                            {app.student?.name}
+                          </p>
+                          <p className="text-xs text-slate-400">{app.student?.email}</p>
+                          {app.student?.rollNumber && (
+                            <p className="text-xs text-slate-300 font-mono">{app.student.rollNumber}</p>
+                          )}
+                        </div>
                       </div>
                     </td>
+
                     <td className="px-4 py-4 hidden sm:table-cell">
                       <span className="text-xs text-slate-500">{app.student?.branch || '—'}</span>
                     </td>
+
                     <td className="px-4 py-4 hidden md:table-cell">
                       <span className={`text-sm font-bold ${
-                        app.student?.cgpa >= 8 ? 'text-emerald-600' :
-                        app.student?.cgpa >= 6 ? 'text-amber-500' : 'text-red-500'
+                        app.student?.cgpa >= 8   ? 'text-emerald-600' :
+                        app.student?.cgpa >= 6   ? 'text-amber-500'   : 'text-red-500'
                       }`}>
                         {app.student?.cgpa ?? '—'}
                       </span>
                     </td>
+
                     <td className="px-4 py-4">
                       <span className={`text-xs px-2.5 py-1 rounded-lg font-medium ${STATUS_COLORS[app.status]}`}>
                         {app.status}
@@ -189,6 +224,18 @@ export default function ApplicantsPage() {
                         <p className="text-xs text-slate-400 mt-1">{app.currentRound}</p>
                       )}
                     </td>
+
+                    {/* ── NEW: View Profile button ── */}
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => setProfileStudent(app.student)}
+                        className="flex items-center gap-1 text-[11px] text-[#1a2744] font-semibold border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-300 hover:text-blue-600 px-2.5 py-1.5 rounded-lg transition-all"
+                      >
+                        <GraduationCap className="w-3 h-3" />
+                        View
+                      </button>
+                    </td>
+
                     <td className="px-4 py-4">
                       <button
                         onClick={() => { setSelectedApp(app); setNewStatus(app.status) }}
@@ -205,7 +252,7 @@ export default function ApplicantsPage() {
         )}
       </div>
 
-      {/* Status Update Modal */}
+      {/* ── Status Update Modal ── */}
       {selectedApp && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-xl">
@@ -214,7 +261,9 @@ export default function ApplicantsPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-slate-500 font-semibold mb-2 block uppercase tracking-wide">New Status</label>
+                <label className="text-xs text-slate-500 font-semibold mb-2 block uppercase tracking-wide">
+                  New Status
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {STATUSES.map(s => (
                     <button
@@ -235,7 +284,9 @@ export default function ApplicantsPage() {
 
               {newStatus === 'selected' && (
                 <div>
-                  <label className="text-xs text-slate-500 font-semibold mb-1.5 block uppercase tracking-wide">Offered Package</label>
+                  <label className="text-xs text-slate-500 font-semibold mb-1.5 block uppercase tracking-wide">
+                    Offered Package
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g. 12 LPA"
@@ -247,7 +298,9 @@ export default function ApplicantsPage() {
               )}
 
               <div>
-                <label className="text-xs text-slate-500 font-semibold mb-1.5 block uppercase tracking-wide">Note (optional)</label>
+                <label className="text-xs text-slate-500 font-semibold mb-1.5 block uppercase tracking-wide">
+                  Note (optional)
+                </label>
                 <textarea
                   rows={3}
                   placeholder="Add a note for this update..."
@@ -260,7 +313,12 @@ export default function ApplicantsPage() {
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => { setSelectedApp(null); setNewStatus(''); setNoteText(''); setPackageText('') }}
+                onClick={() => {
+                  setSelectedApp(null)
+                  setNewStatus('')
+                  setNoteText('')
+                  setPackageText('')
+                }}
                 className="flex-1 py-2.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all font-medium"
               >
                 Cancel

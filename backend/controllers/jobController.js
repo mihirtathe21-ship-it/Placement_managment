@@ -7,7 +7,6 @@ import { User } from '../models/User.js'
 const notifyEligibleStudents = async (job) => {
   try {
     const filter = { role: 'student', isActive: true }
-    // Only filter by branch/year if eligibility is actually set
     if (job.eligibility?.branches?.length > 0) {
       filter.branch = { $in: job.eligibility.branches }
     }
@@ -40,7 +39,6 @@ export const getJobs = async (req, res, next) => {
     const { status, type, branch, page = 1, limit = 12, search } = req.query
 
     const filter = {}
-
     if (status) filter.status = status
     if (type)   filter.type = type
     if (branch) filter['eligibility.branches'] = branch
@@ -51,7 +49,6 @@ export const getJobs = async (req, res, next) => {
       ]
     }
 
-    // Students: show active + upcoming jobs only (NO branch restriction — show all)
     if (req.user.role === 'student' && !status) {
       filter.status = { $in: ['active', 'upcoming'] }
     }
@@ -64,7 +61,6 @@ export const getJobs = async (req, res, next) => {
 
     const total = await Job.countDocuments(filter)
 
-    // For students, attach their application status to each job
     if (req.user.role === 'student') {
       const jobIds = jobs.map(j => j._id)
       const applications = await Application.find({
@@ -110,7 +106,6 @@ export const getJob = async (req, res, next) => {
     }
 
     const applicantCount = await Application.countDocuments({ job: job._id })
-
     res.json({ job, applicationStatus, applicantCount })
   } catch (err) {
     next(err)
@@ -143,8 +138,7 @@ export const updateJob = async (req, res, next) => {
     }
 
     const updated = await Job.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
+      new: true, runValidators: true,
     })
     res.json({ job: updated, message: 'Job updated successfully' })
   } catch (err) {
@@ -160,7 +154,11 @@ export const deleteJob = async (req, res, next) => {
     const job = await Job.findById(req.params.id)
     if (!job) return res.status(404).json({ message: 'Job not found' })
 
-    if (req.user.role !== 'admin' && req.user.role !== 'tpo' && job.postedBy.toString() !== req.user._id.toString()) {
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'tpo' &&
+      job.postedBy.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({ message: 'Not authorized' })
     }
 
@@ -182,7 +180,13 @@ export const getApplicants = async (req, res, next) => {
     if (status) filter.status = status
 
     const applications = await Application.find(filter)
-      .populate('student', 'name email phone branch cgpa rollNumber passingYear')
+      // ✅ FIXED — added photo, prn, dob, address, resume, domain,
+      //            hasBacklog, backlogs so the profile modal shows full info
+      .populate(
+        'student',
+        'name email phone branch cgpa rollNumber passingYear ' +
+        'photo prn dob address resume domain hasBacklog backlogs'
+      )
       .sort({ createdAt: -1 })
 
     res.json({ applications, total: applications.length })

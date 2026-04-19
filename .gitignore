@@ -1,2 +1,6 @@
 # Environment files
 .env
+
+# Keep uploads folder but ignore its contents
+backend/uploads/*
+!backend/uploads/.gitkeep

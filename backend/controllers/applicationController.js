@@ -27,16 +27,12 @@ export const applyToJob = async (req, res, next) => {
       return res.status(400).json({ message: 'You have already applied to this job.' })
  
     // ── Eligibility checks ───────────────────────────────────────────────────
- 
-    // CGPA check
     if (job.eligibility.minCGPA && req.user.cgpa < job.eligibility.minCGPA) {
       return res.status(400).json({
         message: `Minimum CGPA required: ${job.eligibility.minCGPA}. Your CGPA: ${req.user.cgpa}`,
       })
     }
  
-    // ← NEW: Backlog check
-    // job.eligibility.backlogs = max backlogs allowed (0 means zero-backlog company)
     const maxAllowed = job.eligibility.backlogs ?? 0
     const studentBacklogs = req.user.backlogs ?? 0
     if (studentBacklogs > maxAllowed) {
@@ -45,7 +41,6 @@ export const applyToJob = async (req, res, next) => {
       })
     }
  
-    // ← NEW: Branch check
     if (
       job.eligibility.branches?.length > 0 &&
       !job.eligibility.branches.includes(req.user.branch)
@@ -55,7 +50,6 @@ export const applyToJob = async (req, res, next) => {
       })
     }
  
-    // ← NEW: Passing year check
     if (
       job.eligibility.passingYear?.length > 0 &&
       !job.eligibility.passingYear.includes(req.user.passingYear)
@@ -64,8 +58,6 @@ export const applyToJob = async (req, res, next) => {
         message: `Your passing year (${req.user.passingYear}) is not eligible for this job.`,
       })
     }
- 
-    // ────────────────────────────────────────────────────────────────────────
  
     const application = await Application.create({
       job:     jobId,
@@ -115,10 +107,10 @@ export const updateApplicationStatus = async (req, res, next) => {
       return res.status(404).json({ message: 'Application not found' })
  
     application.status = status
-    if (note)           application.notes         = note
-    if (offeredPackage) application.offeredPackage = offeredPackage
-    if (offerLetterUrl) application.offerLetterUrl = offerLetterUrl
-    if (currentRound)   application.currentRound   = currentRound
+    if (note)           application.notes          = note
+    if (offeredPackage) application.offeredPackage  = offeredPackage
+    if (offerLetterUrl) application.offerLetterUrl  = offerLetterUrl
+    if (currentRound)   application.currentRound    = currentRound
  
     application.statusHistory.push({ status, changedBy: req.user._id, note })
     await application.save()
@@ -175,8 +167,8 @@ export const getAllApplications = async (req, res, next) => {
     if (status) filter.status = status
  
     const applications = await Application.find(filter)
-      // ← NEW: added hasBacklog + backlogs for admin backlog badge & sorting
-      .populate('student', 'name email branch cgpa rollNumber hasBacklog backlogs')
+      // ✅ FIXED — added all student profile fields so modal can show full info
+      .populate('student', 'name email branch cgpa rollNumber hasBacklog backlogs photo prn dob address resume phone domain passingYear')
       .populate('job', 'title company')
       .sort({ updatedAt: -1 })
       .skip((page - 1) * limit)

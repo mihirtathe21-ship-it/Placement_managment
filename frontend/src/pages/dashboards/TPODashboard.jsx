@@ -9,6 +9,7 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import api from '../../api'
 import toast from 'react-hot-toast'
+import StudentProfileModal from '../../components/ui/StudentProfileModal'
 
 const DOMAINS = [
   'Full Stack Development',
@@ -121,7 +122,7 @@ function HomeTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UPLOAD TAB
+// UPLOAD TAB  (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 function UploadTab() {
   const [rows, setRows]             = useState([])
@@ -254,7 +255,6 @@ function UploadTab() {
         </p>
       </div>
 
-      {/* Template */}
       <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
         <FileSpreadsheet className="w-5 h-5 text-blue-600 shrink-0" />
         <div className="flex-1 min-w-0">
@@ -267,7 +267,6 @@ function UploadTab() {
         </button>
       </div>
 
-      {/* Formats */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-slate-400">Supported:</span>
         {['.xlsx', '.xls', '.csv'].map(f => (
@@ -276,7 +275,6 @@ function UploadTab() {
         <span className="text-xs text-slate-300 ml-1">· Include a "Domain" column for specialization</span>
       </div>
 
-      {/* Drop zone */}
       <div
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
@@ -304,7 +302,6 @@ function UploadTab() {
         )}
       </div>
 
-      {/* Parse error */}
       {parseError && (
         <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -315,7 +312,6 @@ function UploadTab() {
         </div>
       )}
 
-      {/* Preview */}
       {rows.length > 0 && headers.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
@@ -350,7 +346,6 @@ function UploadTab() {
         </div>
       )}
 
-      {/* Upload button */}
       {rows.length > 0 && (
         <button onClick={handleUpload} disabled={uploading}
           className="w-full py-3.5 bg-[#1a2744] hover:bg-[#243460] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-md">
@@ -362,7 +357,6 @@ function UploadTab() {
         </button>
       )}
 
-      {/* Result */}
       {result && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2">
@@ -398,7 +392,7 @@ function UploadTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FIND STUDENTS TAB — with domain filter
+// FIND STUDENTS TAB — with domain filter + profile modal
 // ─────────────────────────────────────────────────────────────────────────────
 function FindStudentsTab() {
   const [students, setStudents]         = useState([])
@@ -411,6 +405,10 @@ function FindStudentsTab() {
   const [result, setResult]             = useState(null)
   const [hasFetched, setHasFetched]     = useState(false)
   const [page, setPage]                 = useState(1)
+
+  // ── NEW: profile modal state ──
+  const [profileStudent, setProfileStudent] = useState(null)
+
   const LIMIT = 15
 
   const [search,      setSearch]      = useState('')
@@ -491,11 +489,22 @@ function FindStudentsTab() {
   return (
     <div className="space-y-5">
 
+      {/* ── Student Profile Modal ── */}
+      {profileStudent && (
+        <StudentProfileModal
+          student={profileStudent}
+          onClose={() => setProfileStudent(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-xl font-bold text-[#1a2744]">Find Students</h2>
-          <p className="text-slate-400 text-sm mt-0.5">Filter by criteria &amp; domain, then shortlist for a drive</p>
+          <p className="text-slate-400 text-sm mt-0.5">
+            Filter by criteria &amp; domain, then shortlist for a drive.{' '}
+            <span className="text-blue-500 font-medium">Click any row to view full profile.</span>
+          </p>
         </div>
         <Link to="/tpo-dashboard/upload"
           className="flex items-center gap-1.5 text-xs text-violet-600 hover:text-violet-700 border border-violet-200 bg-violet-50 hover:bg-violet-100 px-3 py-2 rounded-xl transition-all font-medium shadow-sm">
@@ -518,7 +527,6 @@ function FindStudentsTab() {
           )}
         </div>
 
-        {/* Search box */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <input type="text"
@@ -528,7 +536,6 @@ function FindStudentsTab() {
           />
         </div>
 
-        {/* Numeric / text filters */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
             { label: 'Min CGPA',     val: minCGPA,     set: setMinCGPA,     type: 'number', ph: 'e.g. 7.0', step: '0.1', min: '0', max: '10' },
@@ -547,7 +554,6 @@ function FindStudentsTab() {
           ))}
         </div>
 
-        {/* ── Domain filter pills ── */}
         <div>
           <div className="flex items-center gap-2 mb-2.5">
             <label className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">Specialization Domain</label>
@@ -574,7 +580,6 @@ function FindStudentsTab() {
           </div>
         </div>
 
-        {/* Result count */}
         {hasFetched && !loading && (
           <p className="text-sm text-slate-500 pt-2 border-t border-slate-100">
             Found <span className="font-bold text-emerald-600">{total}</span> student{total !== 1 ? 's' : ''}
@@ -583,7 +588,6 @@ function FindStudentsTab() {
         )}
       </div>
 
-      {/* Shortlist result banner */}
       {result && (
         <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 shadow-sm">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -604,7 +608,6 @@ function FindStudentsTab() {
       {/* ── Student Table ── */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 
-        {/* Select-all header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
           <div className="flex items-center gap-3">
             <input type="checkbox"
@@ -631,23 +634,25 @@ function FindStudentsTab() {
               <th className="text-left text-[11px] text-slate-400 px-4 py-3 font-semibold uppercase tracking-wide">CGPA</th>
               <th className="text-left text-[11px] text-slate-400 px-4 py-3 font-semibold uppercase tracking-wide hidden lg:table-cell">Domain</th>
               <th className="text-left text-[11px] text-slate-400 px-4 py-3 font-semibold uppercase tracking-wide hidden lg:table-cell">Year</th>
+              {/* ── NEW column ── */}
+              <th className="text-left text-[11px] text-slate-400 px-4 py-3 font-semibold uppercase tracking-wide">Profile</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               [...Array(6)].map((_, i) => (
-                <tr key={i}><td colSpan={7} className="px-5 py-3">
+                <tr key={i}><td colSpan={8} className="px-5 py-3">
                   <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
                 </td></tr>
               ))
             ) : !hasFetched ? (
-              <tr><td colSpan={7} className="text-center py-16">
+              <tr><td colSpan={8} className="text-center py-16">
                 <Search className="w-10 h-10 text-slate-200 mx-auto mb-3" />
                 <p className="text-slate-400 text-sm font-medium">Use the filters above to search for students</p>
                 <p className="text-slate-300 text-xs mt-1">Leave all blank to show all students</p>
               </td></tr>
             ) : students.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-16">
+              <tr><td colSpan={8} className="text-center py-16">
                 <GraduationCap className="w-10 h-10 text-slate-200 mx-auto mb-3" />
                 <p className="text-slate-400 text-sm font-medium">No students found</p>
                 <p className="text-slate-300 text-xs mt-1">
@@ -661,15 +666,19 @@ function FindStudentsTab() {
                 )}
               </td></tr>
             ) : students.map(s => (
-              <tr key={s._id} onClick={() => toggleOne(s._id)}
-                className={`cursor-pointer transition-colors ${
+              <tr key={s._id}
+                className={`transition-colors ${
                   selected.has(s._id) ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-slate-50'
-                }`}>
+                }`}
+              >
+                {/* Checkbox — stop row-click from toggling checkbox only */}
                 <td className="px-5 py-3" onClick={e => e.stopPropagation()}>
                   <input type="checkbox" checked={selected.has(s._id)} onChange={() => toggleOne(s._id)}
                     className="w-4 h-4 rounded cursor-pointer accent-[#1a2744]" />
                 </td>
-                <td className="px-4 py-3">
+
+                {/* Clickable cells → open profile */}
+                <td className="px-4 py-3 cursor-pointer" onClick={() => setProfileStudent(s)}>
                   <div className="flex items-center gap-2.5">
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                       selected.has(s._id) ? 'bg-[#1a2744] text-white' : 'bg-slate-100 text-slate-500'
@@ -680,13 +689,13 @@ function FindStudentsTab() {
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 hidden sm:table-cell">
+                <td className="px-4 py-3 hidden sm:table-cell cursor-pointer" onClick={() => setProfileStudent(s)}>
                   <span className="text-xs text-slate-500 font-mono">{s.rollNumber || '—'}</span>
                 </td>
-                <td className="px-4 py-3 hidden md:table-cell">
+                <td className="px-4 py-3 hidden md:table-cell cursor-pointer" onClick={() => setProfileStudent(s)}>
                   <span className="text-xs text-slate-500">{s.branch || '—'}</span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 cursor-pointer" onClick={() => setProfileStudent(s)}>
                   <span className={`text-sm font-bold ${
                     !s.cgpa       ? 'text-slate-300'    :
                     s.cgpa >= 8.5 ? 'text-emerald-600' :
@@ -694,7 +703,7 @@ function FindStudentsTab() {
                     s.cgpa >= 6.5 ? 'text-amber-600'   : 'text-red-500'
                   }`}>{s.cgpa ?? '—'}</span>
                 </td>
-                <td className="px-4 py-3 hidden lg:table-cell">
+                <td className="px-4 py-3 hidden lg:table-cell cursor-pointer" onClick={() => setProfileStudent(s)}>
                   {s.domain ? (
                     <span className="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
                       {s.domain}
@@ -703,15 +712,25 @@ function FindStudentsTab() {
                     <span className="text-xs text-slate-300">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 hidden lg:table-cell">
+                <td className="px-4 py-3 hidden lg:table-cell cursor-pointer" onClick={() => setProfileStudent(s)}>
                   <span className="text-xs text-slate-500">{s.passingYear || '—'}</span>
+                </td>
+
+                {/* ── NEW: explicit View Profile button ── */}
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => setProfileStudent(s)}
+                    className="flex items-center gap-1 text-[11px] text-[#1a2744] font-semibold border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-300 hover:text-blue-600 px-2.5 py-1.5 rounded-lg transition-all"
+                  >
+                    <Users className="w-3 h-3" />
+                    View
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50">
             <span className="text-xs text-slate-400 font-medium">{total} total students</span>
@@ -726,7 +745,7 @@ function FindStudentsTab() {
         )}
       </div>
 
-      {/* ── Sticky shortlist bar ── */}
+      {/* Sticky shortlist bar */}
       {selected.size > 0 && (
         <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md border border-[#1a2744]/20 rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shadow-xl shadow-slate-200">
           <div className="flex items-center gap-2 shrink-0">
@@ -761,7 +780,7 @@ function FindStudentsTab() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN — renders correct tab based on route
+// MAIN
 // ─────────────────────────────────────────────────────────────────────────────
 export default function TPODashboard() {
   const location = useLocation()

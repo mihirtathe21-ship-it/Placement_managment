@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import LoginPage        from './pages/auth/LoginPage'
 import RegisterPage     from './pages/auth/RegisterPage'
 import StudentDashboard from './pages/dashboards/StudentDashboard'
+import PreparePage from './pages/student/PreparePage'
 import TPODashboard     from './pages/dashboards/TPODashboard'
 import RecruiterDashboard from './pages/dashboards/RecruiterDashboard'
 import AdminDashboard   from './pages/dashboards/AdminDashboard'
@@ -15,6 +16,7 @@ import MyApplicationsPage from './pages/applications/MyApplicationsPage'
 import ApplicantsPage   from './pages/applications/ApplicantsPage'
 import AnalyticsPage    from './pages/analytics/AnalyticsPage'
 import NotificationsPage from './pages/notifications/NotificationsPage'
+
 
 const ROLE_HOME = {
   student:   '/student-dashboard',
@@ -128,6 +130,7 @@ export default function App() {
           <Route path="/notifications" element={
             <PrivateRoute><NotificationsPage /></PrivateRoute>
           } />
+          <Route path="/prepare" element={<PreparePage />} />
 
           {/* ── Default ── */}
           <Route path="/"  element={<Root />} />

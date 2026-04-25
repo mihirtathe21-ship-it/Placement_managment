@@ -1,4 +1,7 @@
 import express from 'express'
+import multer from 'multer'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import {
   applyToJob, getMyApplications, updateApplicationStatus,
   withdrawApplication, getAllApplications,
@@ -9,13 +12,42 @@ import { Job } from '../models/Job.js'
 import { Notification } from '../models/Notification.js'
 import { protect, authorize } from '../middleware/auth.js'
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname  = path.dirname(__filename)
+
+// ── Multer — save uploaded resumes to /uploads ────────────────────────────────
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '..', 'uploads'))
+  },
+  filename: (req, file, cb) => {
+    const unique = `${req.user._id}-resume-${Date.now()}${path.extname(file.originalname)}`
+    cb(null, unique)
+  },
+})
+
+const fileFilter = (req, file, cb) => {
+  const allowed = ['.pdf', '.doc', '.docx']
+  const ext = path.extname(file.originalname).toLowerCase()
+  if (allowed.includes(ext)) cb(null, true)
+  else cb(new Error('Only PDF, DOC, DOCX files are allowed'), false)
+}
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+})
+
 const router = express.Router()
 
-router.post('/', protect, authorize('student'), applyToJob)
-router.get('/my', protect, authorize('student'), getMyApplications)
-router.get('/', protect, authorize('admin', 'tpo'), getAllApplications)
-router.patch('/:id/status', protect, authorize('admin', 'tpo', 'recruiter'), updateApplicationStatus)
-router.patch('/:id/withdraw', protect, authorize('student'), withdrawApplication)
+// ── Apply to job — accepts multipart/form-data (resume optional) ──────────────
+router.post('/', protect, authorize('student'), upload.single('resume'), applyToJob)
+
+router.get('/my',              protect, authorize('student'),                    getMyApplications)
+router.get('/',                protect, authorize('admin', 'tpo'),               getAllApplications)
+router.patch('/:id/status',    protect, authorize('admin', 'tpo', 'recruiter'),  updateApplicationStatus)
+router.patch('/:id/withdraw',  protect, authorize('student'),                    withdrawApplication)
 
 // @desc  TPO bulk-shortlist students from Excel by email for a drive
 // @route POST /api/applications/bulk-shortlist
@@ -30,9 +62,7 @@ router.post('/bulk-shortlist', protect, authorize('tpo', 'admin'), async (req, r
     const job = await Job.findById(jobId)
     if (!job) return res.status(404).json({ message: 'Drive not found' })
 
-    let shortlisted = 0
-    let alreadyApplied = 0
-    let notFound = 0
+    let shortlisted = 0, alreadyApplied = 0, notFound = 0
 
     for (const email of emails) {
       if (!email) continue
@@ -41,7 +71,6 @@ router.post('/bulk-shortlist', protect, authorize('tpo', 'admin'), async (req, r
 
       const existing = await Application.findOne({ job: jobId, student: student._id })
       if (existing) {
-        // If already applied, just move to shortlisted
         if (existing.status === 'applied') {
           existing.status = 'shortlisted'
           existing.statusHistory.push({ status: 'shortlisted', changedBy: req.user._id, note: 'Bulk shortlisted via Excel' })
@@ -51,7 +80,6 @@ router.post('/bulk-shortlist', protect, authorize('tpo', 'admin'), async (req, r
           alreadyApplied++
         }
       } else {
-        // Create application directly as shortlisted
         await Application.create({
           job: jobId,
           student: student._id,
@@ -64,23 +92,17 @@ router.post('/bulk-shortlist', protect, authorize('tpo', 'admin'), async (req, r
         shortlisted++
       }
 
-      // Notify student
       await Notification.create({
-        recipient: student._id,
-        type: 'shortlisted',
-        title: `Shortlisted for ${job.company}`,
-        message: `You have been shortlisted for ${job.title} at ${job.company}. Check your applications for details.`,
-        link: '/applications',
+        recipient:  student._id,
+        type:       'shortlisted',
+        title:      `Shortlisted for ${job.company}`,
+        message:    `You have been shortlisted for ${job.title} at ${job.company}. Check your applications for details.`,
+        link:       '/applications',
         relatedJob: jobId,
       })
     }
 
-    res.json({
-      message: `Shortlisting complete`,
-      shortlisted,
-      alreadyApplied,
-      notFound,
-    })
+    res.json({ message: 'Shortlisting complete', shortlisted, alreadyApplied, notFound })
   } catch (err) {
     next(err)
   }

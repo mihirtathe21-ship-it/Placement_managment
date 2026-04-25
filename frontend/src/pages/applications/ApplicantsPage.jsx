@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ChevronLeft, User, GraduationCap,
-  CheckCircle2, XCircle, Clock, AlertCircle, Star
+  CheckCircle2, XCircle, Clock, AlertCircle, Star,
+  Filter, Download, Search, Eye, Mail, Briefcase,
+  Calendar, Award, TrendingUp, Users, MessageSquare,
+  Zap, Shield, Bookmark, Send, Phone, MapPin,
+  Building2, DollarSign, Sparkles, Heart, ThumbsUp
 } from 'lucide-react'
 import api from '../../api'
 import toast from 'react-hot-toast'
@@ -11,20 +15,27 @@ import StudentProfileModal from '../../components/ui/StudentProfileModal'
 const STATUSES = ['applied', 'shortlisted', 'interview', 'selected', 'rejected']
 
 const STATUS_COLORS = {
-  applied:     'text-blue-700 bg-blue-50 border border-blue-200',
-  shortlisted: 'text-amber-700 bg-amber-50 border border-amber-200',
-  interview:   'text-violet-700 bg-violet-50 border border-violet-200',
-  selected:    'text-emerald-700 bg-emerald-50 border border-emerald-200',
-  rejected:    'text-red-600 bg-red-50 border border-red-200',
-  withdrawn:   'text-slate-500 bg-slate-100 border border-slate-200',
+  applied:     'text-blue-700 bg-blue-50 border-blue-200',
+  shortlisted: 'text-amber-700 bg-amber-50 border-amber-200',
+  interview:   'text-violet-700 bg-violet-50 border-violet-200',
+  selected:    'text-emerald-700 bg-emerald-50 border-emerald-200',
+  rejected:    'text-red-600 bg-red-50 border-red-200',
 }
 
 const STATUS_ACTIVE = {
-  applied:     'bg-blue-600 border-blue-600 text-white',
-  shortlisted: 'bg-amber-500 border-amber-500 text-white',
-  interview:   'bg-violet-600 border-violet-600 text-white',
-  selected:    'bg-emerald-600 border-emerald-600 text-white',
-  rejected:    'bg-red-500 border-red-500 text-white',
+  applied:     'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md',
+  shortlisted: 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md',
+  interview:   'bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-md',
+  selected:    'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md',
+  rejected:    'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md',
+}
+
+const STATUS_ICONS = {
+  applied:     Clock,
+  shortlisted: Star,
+  interview:   MessageSquare,
+  selected:    CheckCircle2,
+  rejected:    XCircle,
 }
 
 export default function ApplicantsPage() {
@@ -36,13 +47,13 @@ export default function ApplicantsPage() {
   const [loading, setLoading]             = useState(true)
   const [filterStatus, setFilterStatus]   = useState('')
   const [updating, setUpdating]           = useState(null)
-  const [selectedApp, setSelectedApp]     = useState(null)   // for status update modal
+  const [selectedApp, setSelectedApp]     = useState(null)
   const [newStatus, setNewStatus]         = useState('')
   const [noteText, setNoteText]           = useState('')
   const [packageText, setPackageText]     = useState('')
-
-  // ── NEW: profile modal state ──────────────────────────────────────────────
   const [profileStudent, setProfileStudent] = useState(null)
+  const [searchTerm, setSearchTerm]       = useState('')
+  const [animateStats, setAnimateStats]   = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
@@ -55,6 +66,7 @@ export default function ApplicantsPage() {
       ])
       setJob(jobRes.data.job)
       setApplications(appsRes.data.applications)
+      setTimeout(() => setAnimateStats(true), 100)
     } catch {
       toast.error('Failed to load applicants')
     } finally {
@@ -91,10 +103,30 @@ export default function ApplicantsPage() {
     return acc
   }, {})
 
-  return (
-    <div className="min-h-screen bg-gray-50 text-slate-800">
+  const filteredApplications = applications.filter(app => 
+    app.student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.student?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.student?.rollNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
-      {/* ── Student Profile Modal ── */}
+  const getCgpaColor = (cgpa) => {
+    if (!cgpa) return 'text-gray-400'
+    if (cgpa >= 8) return 'text-emerald-600'
+    if (cgpa >= 6) return 'text-amber-600'
+    return 'text-red-600'
+  }
+
+  const stats = [
+    { label: 'Total Applicants', value: applications.length, icon: Users, color: 'blue' },
+    { label: 'Shortlisted', value: counts.shortlisted || 0, icon: Star, color: 'amber' },
+    { label: 'Selected', value: counts.selected || 0, icon: CheckCircle2, color: 'emerald' },
+    { label: 'Rejected', value: counts.rejected || 0, icon: XCircle, color: 'red' },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+      
+      {/* Student Profile Modal */}
       {profileStudent && (
         <StudentProfileModal
           student={profileStudent}
@@ -102,216 +134,372 @@ export default function ApplicantsPage() {
         />
       )}
 
-      {/* Header */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-slate-400 hover:text-slate-700 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-[#1a2744]">
-              {job ? `${job.company} — ${job.title}` : 'Applicants'}
-            </h1>
-            <p className="text-slate-400 text-xs mt-0.5">
-              {applications.length} applicants ·{' '}
-              <span className="text-blue-500 font-medium">Click a name to view full profile</span>
-            </p>
+      {/* Header with Gradient */}
+      <div className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 shadow-xl overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <button
+              onClick={() => navigate(-1)}
+              className="group text-white/70 hover:text-white transition-all hover:translate-x-[-2px] flex items-center gap-1"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span className="text-sm">Back to Job</span>
+            </button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-white">
+                {job ? `${job.company} — ${job.title}` : 'Applicants Management'}
+              </h1>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-blue-200 text-sm flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {applications.length} Total Applicants
+                </p>
+                <span className="text-gray-600">•</span>
+                <p className="text-blue-200 text-sm flex items-center gap-1">
+                  <Briefcase className="w-3 h-3" />
+                  {job?.openings || 0} Openings
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => toast.success('Exporting applicants data...')}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-semibold transition-all hover:scale-105"
+            >
+              <Download className="w-4 h-4" />
+              Export Data
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
-        {/* Status filter tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            onClick={() => setFilterStatus('')}
-            className={`text-xs px-4 py-2 rounded-xl border transition-all font-medium ${
-              !filterStatus
-                ? 'bg-[#1a2744] border-[#1a2744] text-white shadow-sm'
-                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
-            }`}
-          >
-            All ({applications.length})
-          </button>
-          {STATUSES.map(s => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
-              className={`text-xs px-4 py-2 rounded-xl border transition-all font-medium ${
-                filterStatus === s
-                  ? STATUS_ACTIVE[s]
-                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
-              }`}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {stats.map((stat) => (
+            <div 
+              key={stat.label}
+              className="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             >
-              {s.charAt(0).toUpperCase() + s.slice(1)}{counts[s] ? ` (${counts[s]})` : ''}
-            </button>
+              <div className={`absolute top-0 right-0 w-24 h-24 bg-${stat.color}-500 opacity-5 rounded-bl-full`}></div>
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`p-2 bg-${stat.color}-100 rounded-xl`}>
+                    <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
+                  </div>
+                  <span className="text-2xl font-bold text-gray-800">
+                    {animateStats ? stat.value : 0}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
+                {applications.length > 0 && (
+                  <div className="mt-2 h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full bg-${stat.color}-500 rounded-full transition-all duration-1000`}
+                      style={{ width: `${(stat.value / applications.length) * 100}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* Table */}
+        {/* Search and Filter Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-5 mb-6">
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex-1 min-w-[250px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, or roll number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status Filter Tabs */}
+          <div className="flex flex-wrap gap-2 mt-5">
+            <button
+              onClick={() => setFilterStatus('')}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                !filterStatus
+                  ? 'bg-gray-900 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                All Applicants
+                <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/20">
+                  {applications.length}
+                </span>
+              </span>
+            </button>
+            {STATUSES.map((s) => {
+              const StatusIcon = STATUS_ICONS[s]
+              return (
+                <button
+                  key={s}
+                  onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    filterStatus === s
+                      ? STATUS_ACTIVE[s]
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {StatusIcon && <StatusIcon className="w-3.5 h-3.5" />}
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {counts[s] > 0 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-200">
+                      {counts[s]}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Applicants List */}
         {loading ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 animate-pulse h-16" />
+              <div key={i} className="bg-white rounded-2xl p-5 animate-pulse shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                  </div>
+                  <div className="w-24 h-8 bg-gray-200 rounded-lg"></div>
+                </div>
+              </div>
             ))}
           </div>
-        ) : applications.length === 0 ? (
-          <div className="text-center py-24">
-            <User className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-            <p className="text-slate-400">No applicants found</p>
+        ) : filteredApplications.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
+            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-lg font-medium">No applicants found</p>
+            <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or search term</p>
           </div>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left text-xs text-slate-400 font-semibold px-5 py-3 uppercase tracking-wide">Student</th>
-                  <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 hidden sm:table-cell uppercase tracking-wide">Branch</th>
-                  <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 hidden md:table-cell uppercase tracking-wide">CGPA</th>
-                  <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 uppercase tracking-wide">Status</th>
-                  {/* ── NEW column ── */}
-                  <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 uppercase tracking-wide">Profile</th>
-                  <th className="text-left text-xs text-slate-400 font-semibold px-4 py-3 uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {applications.map(app => (
-                  <tr key={app._id} className="hover:bg-slate-50 transition-colors">
-
-                    {/* Name — clickable to open profile */}
-                    <td
-                      className="px-5 py-4 cursor-pointer"
-                      onClick={() => setProfileStudent(app.student)}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
-                          {app.student?.name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-[#1a2744] hover:text-blue-600 transition-colors leading-tight">
-                            {app.student?.name}
-                          </p>
-                          <p className="text-xs text-slate-400">{app.student?.email}</p>
-                          {app.student?.rollNumber && (
-                            <p className="text-xs text-slate-300 font-mono">{app.student.rollNumber}</p>
-                          )}
+          <div className="space-y-3">
+            {filteredApplications.map((app) => {
+              const StatusIcon = STATUS_ICONS[app.status]
+              return (
+                <div 
+                  key={app._id} 
+                  className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:translate-x-1 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+                  <div className="relative p-5">
+                    <div className="flex flex-wrap gap-4 items-start justify-between">
+                      
+                      {/* Student Info */}
+                      <div className="flex-1 min-w-[200px] cursor-pointer" onClick={() => setProfileStudent(app.student)}>
+                        <div className="flex items-start gap-4">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
+                            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                              {app.student?.name?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                            {app.status === 'selected' && (
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                              {app.student?.name}
+                            </p>
+                            <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {app.student?.email}
+                              </span>
+                              {app.student?.rollNumber && (
+                                <span className="flex items-center gap-1">
+                                  <Briefcase className="w-3 h-3" />
+                                  Roll: {app.student.rollNumber}
+                                </span>
+                              )}
+                              {app.student?.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-3 h-3" />
+                                  {app.student.phone}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </td>
 
-                    <td className="px-4 py-4 hidden sm:table-cell">
-                      <span className="text-xs text-slate-500">{app.student?.branch || '—'}</span>
-                    </td>
+                      {/* Branch & CGPA */}
+                      <div className="flex items-center gap-4">
+                        {app.student?.branch && (
+                          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+                            <GraduationCap className="w-3.5 h-3.5 text-gray-500" />
+                            <span className="text-xs font-medium text-gray-600">{app.student.branch}</span>
+                          </div>
+                        )}
+                        {app.student?.cgpa && (
+                          <div className="text-center">
+                            <div className={`text-xl font-bold ${getCgpaColor(app.student.cgpa)}`}>
+                              {app.student.cgpa}
+                            </div>
+                            <div className="text-xs text-gray-400">CGPA</div>
+                          </div>
+                        )}
+                      </div>
 
-                    <td className="px-4 py-4 hidden md:table-cell">
-                      <span className={`text-sm font-bold ${
-                        app.student?.cgpa >= 8   ? 'text-emerald-600' :
-                        app.student?.cgpa >= 6   ? 'text-amber-500'   : 'text-red-500'
-                      }`}>
-                        {app.student?.cgpa ?? '—'}
-                      </span>
-                    </td>
+                      {/* Status Badge */}
+                      <div className="flex items-center gap-3">
+                        <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${STATUS_COLORS[app.status]}`}>
+                          <span className="flex items-center gap-1.5">
+                            {StatusIcon && <StatusIcon className="w-3 h-3" />}
+                            {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                          </span>
+                        </div>
+                        {app.currentRound && (
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Round: {app.currentRound}
+                          </span>
+                        )}
+                      </div>
 
-                    <td className="px-4 py-4">
-                      <span className={`text-xs px-2.5 py-1 rounded-lg font-medium ${STATUS_COLORS[app.status]}`}>
-                        {app.status}
-                      </span>
-                      {app.currentRound && (
-                        <p className="text-xs text-slate-400 mt-1">{app.currentRound}</p>
-                      )}
-                    </td>
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setProfileStudent(app.student)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Profile
+                        </button>
+                        <button
+                          onClick={() => { setSelectedApp(app); setNewStatus(app.status) }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-xs font-semibold transition-all hover:scale-105 shadow-md"
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          Update
+                        </button>
+                      </div>
+                    </div>
 
-                    {/* ── NEW: View Profile button ── */}
-                    <td className="px-4 py-4">
-                      <button
-                        onClick={() => setProfileStudent(app.student)}
-                        className="flex items-center gap-1 text-[11px] text-[#1a2744] font-semibold border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-300 hover:text-blue-600 px-2.5 py-1.5 rounded-lg transition-all"
-                      >
-                        <GraduationCap className="w-3 h-3" />
-                        View
-                      </button>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <button
-                        onClick={() => { setSelectedApp(app); setNewStatus(app.status) }}
-                        className="text-xs text-[#1a2744] hover:text-[#2d4a8a] font-semibold transition-colors underline underline-offset-2"
-                      >
-                        Update
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    {/* Additional Info */}
+                    {(app.note || app.offeredPackage || app.appliedDate) && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-4 text-xs">
+                        {app.appliedDate && (
+                          <div className="flex items-center gap-1 text-gray-500">
+                            <Calendar className="w-3 h-3" />
+                            Applied: {new Date(app.appliedDate).toLocaleDateString()}
+                          </div>
+                        )}
+                        {app.offeredPackage && (
+                          <div className="flex items-center gap-1">
+                            <Award className="w-3 h-3 text-emerald-500" />
+                            <span className="text-gray-500">Offered:</span>
+                            <span className="font-semibold text-emerald-600">{app.offeredPackage}</span>
+                          </div>
+                        )}
+                        {app.note && (
+                          <div className="flex items-start gap-1 text-gray-500">
+                            <MessageSquare className="w-3 h-3 mt-0.5" />
+                            <span>{app.note}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* ── Status Update Modal ── */}
+      {/* Status Update Modal */}
       {selectedApp && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h3 className="font-bold text-[#1a2744] text-lg mb-1">Update Application</h3>
-            <p className="text-slate-400 text-sm mb-5">{selectedApp.student?.name}</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md transform animate-scaleIn">
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-5 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-white text-lg">Update Application Status</h3>
+                  <p className="text-gray-300 text-sm mt-1">{selectedApp.student?.name}</p>
+                </div>
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                </div>
+              </div>
+            </div>
 
-            <div className="space-y-4">
+            <div className="p-5 space-y-5">
               <div>
-                <label className="text-xs text-slate-500 font-semibold mb-2 block uppercase tracking-wide">
-                  New Status
+                <label className="text-xs text-gray-500 font-semibold mb-2 block uppercase tracking-wide">
+                  Select New Status
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {STATUSES.map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setNewStatus(s)}
-                      className={`text-xs py-2 rounded-lg border transition-all font-medium ${
-                        newStatus === s
-                          ? STATUS_ACTIVE[s]
-                          : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {STATUSES.map((s) => {
+                    const StatusIcon = STATUS_ICONS[s]
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setNewStatus(s)}
+                        className={`text-xs py-2.5 rounded-lg border transition-all duration-200 font-medium ${
+                          newStatus === s
+                            ? STATUS_ACTIVE[s]
+                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="flex items-center justify-center gap-1.5">
+                          {StatusIcon && <StatusIcon className="w-3 h-3" />}
+                          {s}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
               {newStatus === 'selected' && (
-                <div>
-                  <label className="text-xs text-slate-500 font-semibold mb-1.5 block uppercase tracking-wide">
-                    Offered Package
+                <div className="animate-fadeIn">
+                  <label className="text-xs text-gray-500 font-semibold mb-1.5 block uppercase tracking-wide">
+                    Offered Package 💰
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 12 LPA"
+                    placeholder="e.g., 12 LPA"
                     value={packageText}
                     onChange={e => setPackageText(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20 focus:border-[#1a2744]"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
                   />
                 </div>
               )}
 
               <div>
-                <label className="text-xs text-slate-500 font-semibold mb-1.5 block uppercase tracking-wide">
-                  Note (optional)
+                <label className="text-xs text-gray-500 font-semibold mb-1.5 block uppercase tracking-wide">
+                  Add Note (optional)
                 </label>
                 <textarea
                   rows={3}
                   placeholder="Add a note for this update..."
                   value={noteText}
                   onChange={e => setNoteText(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#1a2744]/20 focus:border-[#1a2744] resize-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition resize-none"
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 p-5 pt-0">
               <button
                 onClick={() => {
                   setSelectedApp(null)
@@ -319,21 +507,58 @@ export default function ApplicantsPage() {
                   setNoteText('')
                   setPackageText('')
                 }}
-                className="flex-1 py-2.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all font-medium"
+                className="flex-1 py-2.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleStatusUpdate}
                 disabled={!newStatus || updating}
-                className="flex-1 py-2.5 text-sm bg-[#1a2744] hover:bg-[#243560] disabled:opacity-40 text-white font-semibold rounded-xl transition-all"
+                className="flex-1 py-2.5 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all shadow-md"
               >
-                {updating ? 'Updating...' : 'Update Status'}
+                {updating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Updating...
+                  </span>
+                ) : (
+                  'Update Status'
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-scaleIn {
+          animation: scaleIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
 }

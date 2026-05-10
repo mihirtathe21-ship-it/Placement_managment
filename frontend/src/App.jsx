@@ -16,6 +16,7 @@ import MyApplicationsPage from './pages/applications/MyApplicationsPage'
 import ApplicantsPage   from './pages/applications/ApplicantsPage'
 import AnalyticsPage    from './pages/analytics/AnalyticsPage'
 import NotificationsPage from './pages/notifications/NotificationsPage'
+import VerifyEmailPage from './pages/auth/VerifyEmailPage'
 
 
 const ROLE_HOME = {
@@ -131,6 +132,8 @@ export default function App() {
             <PrivateRoute><NotificationsPage /></PrivateRoute>
           } />
           <Route path="/prepare" element={<PreparePage />} />
+          
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
 
           {/* ── Default ── */}
           <Route path="/"  element={<Root />} />

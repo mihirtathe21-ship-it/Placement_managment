@@ -2,6 +2,7 @@ import { Job } from '../models/Job.js'
 import { Application } from '../models/Application.js'
 import { Notification } from '../models/Notification.js'
 import { User } from '../models/User.js'
+import { sendJobNotificationEmail } from '../utils/emailService.js'   // ← ADD THIS LINE
 
 // Helper: notify all eligible students when a job is posted
 const notifyEligibleStudents = async (job) => {
@@ -16,7 +17,11 @@ const notifyEligibleStudents = async (job) => {
     if (job.eligibility?.minCGPA > 0) {
       filter.cgpa = { $gte: job.eligibility.minCGPA }
     }
-    const students = await User.find(filter).select('_id')
+
+    // ── fetch name + email too (needed for email sending) ──
+    const students = await User.find(filter).select('_id name email')
+
+    // ── 1. In-app notifications (existing) ──
     const notifications = students.map(s => ({
       recipient: s._id,
       type: 'job_posted',
@@ -26,6 +31,26 @@ const notifyEligibleStudents = async (job) => {
       relatedJob: job._id,
     }))
     if (notifications.length) await Notification.insertMany(notifications)
+
+    // ── 2. Email notifications (NEW) ──
+    // Send in batches of 10 to respect Gmail rate limits
+    const BATCH = 10
+    for (let i = 0; i < students.length; i += BATCH) {
+      const batch = students.slice(i, i + BATCH)
+      await Promise.allSettled(
+        batch.map(s =>
+          sendJobNotificationEmail(s.email, s.name, job).catch(err =>
+            console.error(`Email failed for ${s.email}:`, err.message)
+          )
+        )
+      )
+      // 1 second pause between batches
+      if (i + BATCH < students.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+    }
+
+    console.log(`✅ Notified ${students.length} students about: ${job.company} - ${job.title}`)
   } catch (err) {
     console.error('Notification error:', err.message)
   }
@@ -118,7 +143,7 @@ export const getJob = async (req, res, next) => {
 export const createJob = async (req, res, next) => {
   try {
     const job = await Job.create({ ...req.body, postedBy: req.user._id })
-    await notifyEligibleStudents(job)
+    await notifyEligibleStudents(job)   // sends both in-app + email now
     res.status(201).json({ job, message: 'Job posted successfully' })
   } catch (err) {
     next(err)
@@ -180,8 +205,6 @@ export const getApplicants = async (req, res, next) => {
     if (status) filter.status = status
 
     const applications = await Application.find(filter)
-      // ✅ FIXED — added photo, prn, dob, address, resume, domain,
-      //            hasBacklog, backlogs so the profile modal shows full info
       .populate(
         'student',
         'name email phone branch cgpa rollNumber passingYear ' +

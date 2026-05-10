@@ -38,20 +38,29 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password })
-    const { token, user } = res.data
+    const { token, user, requiresVerification } = res.data
+
+    // ── Unverified user: backend returns 403 with requiresVerification flag ──
+    // This is caught by the catch block in HomePage's onSubmit,
+    // so we just re-throw with the flag attached for the caller to handle.
+    if (requiresVerification) {
+      const err = new Error('Email not verified')
+      err.requiresVerification = true
+      err.email = email
+      throw err
+    }
+
     setAuthToken(token)
     setUser(user)
     localStorage.setItem('user', JSON.stringify(user))
     return user
   }
 
+  // ── register: no longer returns token — just signals verification needed ──
   const register = async (formData) => {
     const res = await api.post('/auth/register', formData)
-    const { token, user } = res.data
-    setAuthToken(token)
-    setUser(user)
-    localStorage.setItem('user', JSON.stringify(user))
-    return user
+    // Returns { requiresVerification: true, email, message } — no token yet
+    return res.data
   }
 
   const logout = () => {
@@ -60,7 +69,6 @@ export function AuthProvider({ children }) {
     toast.success('Logged out successfully')
   }
 
-  // ✅ NEW — call this after any profile update to sync UI without re-fetching
   const updateUser = (updatedFields) => {
     setUser((prev) => {
       const merged = { ...prev, ...updatedFields }

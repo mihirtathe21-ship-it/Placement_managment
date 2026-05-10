@@ -8,12 +8,12 @@ import api from '../../api'
 import toast from 'react-hot-toast'
 
 const STATUS_CONFIG = {
-  applied:     { label: 'Applied', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
-  shortlisted: { label: 'Shortlisted', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: AlertCircle },
-  interview:   { label: 'Interview', color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200', icon: Calendar },
-  selected:    { label: 'Selected', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-  rejected:    { label: 'Rejected', color: 'text-red-600', bg: 'bg-red-50 border-red-200', icon: XCircle },
-  withdrawn:   { label: 'Withdrawn', color: 'text-slate-500', bg: 'bg-slate-100 border-slate-200', icon: RotateCcw },
+  applied:     { label: 'Applied',     color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',     icon: Clock        },
+  shortlisted: { label: 'Shortlisted', color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   icon: AlertCircle  },
+  interview:   { label: 'Interview',   color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200', icon: Calendar     },
+  selected:    { label: 'Selected',    color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200',icon: CheckCircle2 },
+  rejected:    { label: 'Rejected',    color: 'text-red-600',     bg: 'bg-red-50 border-red-200',       icon: XCircle      },
+  withdrawn:   { label: 'Withdrawn',   color: 'text-slate-500',   bg: 'bg-slate-100 border-slate-200',  icon: RotateCcw    },
 }
 
 export default function MyApplicationsPage() {
@@ -85,7 +85,7 @@ export default function MyApplicationsPage() {
               placeholder="Search by job title or company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-400"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white transition"
             />
           </div>
         </div>
@@ -94,10 +94,10 @@ export default function MyApplicationsPage() {
         <div className="flex flex-wrap gap-2 mb-8">
           <button
             onClick={() => setFilterStatus('')}
-            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+            className={`px-4 py-2 text-sm rounded-lg transition-colors font-medium ${
               !filterStatus
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
             }`}
           >
             All ({applications.length})
@@ -106,10 +106,10 @@ export default function MyApplicationsPage() {
             <button
               key={key}
               onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
-              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+              className={`px-4 py-2 text-sm rounded-lg transition-colors font-medium border ${
                 filterStatus === key
                   ? `${cfg.bg} ${cfg.color}`
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
               {cfg.label} ({counts[key] || 0})
@@ -121,7 +121,7 @@ export default function MyApplicationsPage() {
         {loading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-lg p-5 animate-pulse">
+              <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 animate-pulse">
                 <div className="flex justify-between">
                   <div className="space-y-2 flex-1">
                     <div className="h-4 bg-gray-200 rounded w-1/3" />
@@ -134,8 +134,10 @@ export default function MyApplicationsPage() {
           </div>
         ) : filteredApplications.length === 0 ? (
           <div className="text-center py-16">
-            <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No applications found</p>
+            <div className="w-16 h-16 bg-[#FDE29A] rounded-full flex items-center justify-center mx-auto mb-3">
+              <Briefcase className="w-8 h-8 text-gray-700" />
+            </div>
+            <p className="text-gray-500 font-medium">No applications found</p>
             {!searchTerm && (
               <Link to="/jobs" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
                 Browse jobs →
@@ -150,30 +152,31 @@ export default function MyApplicationsPage() {
               return (
                 <div
                   key={app._id}
-                  className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
+                  className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-200 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between gap-4">
+
                     {/* Left Section */}
                     <div className="flex-1">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 font-semibold shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-[#FDE29A] flex items-center justify-center text-gray-900 font-semibold shrink-0">
                           {app.job?.company?.charAt(0) || '?'}
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">
+                          <h3 className="font-semibold text-gray-900">
                             {app.job?.title || 'Unknown Role'}
                           </h3>
                           <p className="text-gray-500 text-sm">{app.job?.company}</p>
                           <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
-                            {app.job?.type && <span>{app.job.type}</span>}
-                            {app.job?.package && <span className="text-emerald-600">{app.job.package}</span>}
-                            {app.job?.location && <span>{app.job.location}</span>}
+                            {app.job?.type     && <span className="bg-gray-100 px-2 py-0.5 rounded">{app.job.type}</span>}
+                            {app.job?.package  && <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{app.job.package}</span>}
+                            {app.job?.location && <span className="bg-gray-100 px-2 py-0.5 rounded">{app.job.location}</span>}
                           </div>
                           {app.currentRound && (
-                            <p className="text-xs text-violet-600 mt-2">Round: {app.currentRound}</p>
+                            <p className="text-xs text-blue-600 mt-2 font-medium">Round: {app.currentRound}</p>
                           )}
                           {app.offeredPackage && app.status === 'selected' && (
-                            <p className="text-sm font-medium text-emerald-600 mt-2">Offer: {app.offeredPackage}</p>
+                            <p className="text-sm font-semibold text-emerald-600 mt-2">Offer: {app.offeredPackage}</p>
                           )}
                           <p className="text-xs text-gray-400 mt-2">
                             Applied {new Date(app.createdAt).toLocaleDateString()}
@@ -206,7 +209,7 @@ export default function MyApplicationsPage() {
                       <div className="flex items-center gap-2 overflow-x-auto">
                         {app.statusHistory.map((h, i) => (
                           <div key={i} className="flex items-center gap-2 shrink-0">
-                            <span className={`text-xs px-2 py-0.5 rounded ${STATUS_CONFIG[h.status]?.bg || 'bg-gray-100'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded border ${STATUS_CONFIG[h.status]?.bg || 'bg-gray-100'}`}>
                               <span className={STATUS_CONFIG[h.status]?.color || 'text-gray-500'}>
                                 {h.status}
                               </span>

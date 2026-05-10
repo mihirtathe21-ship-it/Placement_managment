@@ -5,10 +5,10 @@ import { User } from '../models/User.js'
 
 const STATUS_MESSAGES = {
   shortlisted: 'Congratulations! You have been shortlisted.',
-  interview:   'You have been called for an interview round.',
-  selected:    '🎉 Congratulations! You have been selected!',
-  rejected:    'Thank you for applying. Unfortunately, you were not selected.',
-  withdrawn:   'Your application has been withdrawn.',
+  interview: 'You have been called for an interview round.',
+  selected: '🎉 Congratulations! You have been selected!',
+  rejected: 'Thank you for applying. Unfortunately, you were not selected.',
+  withdrawn: 'Your application has been withdrawn.',
 }
 
 // @desc    Apply to a job
@@ -16,32 +16,48 @@ const STATUS_MESSAGES = {
 // @access  Student
 export const applyToJob = async (req, res, next) => {
   try {
-    // req.body comes from multipart/form-data parsed by multer
     const { jobId, coverLetter } = req.body
 
-    if (!jobId)
+    if (!jobId) {
       return res.status(400).json({ message: 'jobId is required' })
+    }
 
     const job = await Job.findById(jobId)
-    if (!job)
+
+    if (!job) {
       return res.status(404).json({ message: 'Job not found' })
+    }
 
-    if (job.status !== 'active')
-      return res.status(400).json({ message: 'This job is no longer accepting applications.' })
+    if (job.status !== 'active') {
+      return res.status(400).json({
+        message: 'This job is no longer accepting applications.',
+      })
+    }
 
-    const existing = await Application.findOne({ job: jobId, student: req.user._id })
-    if (existing)
-      return res.status(400).json({ message: 'You have already applied to this job.' })
+    const existing = await Application.findOne({
+      job: jobId,
+      student: req.user._id,
+    })
 
-    // ── Eligibility checks ────────────────────────────────────────────────────
-    if (job.eligibility?.minCGPA && req.user.cgpa < job.eligibility.minCGPA) {
+    if (existing) {
+      return res.status(400).json({
+        message: 'You have already applied to this job.',
+      })
+    }
+
+    // Eligibility Checks
+    if (
+      job.eligibility?.minCGPA &&
+      req.user.cgpa < job.eligibility.minCGPA
+    ) {
       return res.status(400).json({
         message: `Minimum CGPA required: ${job.eligibility.minCGPA}. Your CGPA: ${req.user.cgpa}`,
       })
     }
 
-    const maxAllowed     = job.eligibility?.backlogs ?? 0
+    const maxAllowed = job.eligibility?.backlogs ?? 0
     const studentBacklogs = req.user.backlogs ?? 0
+
     if (studentBacklogs > maxAllowed) {
       return res.status(400).json({
         message: `This company allows a maximum of ${maxAllowed} backlog(s). You have ${studentBacklogs} backlog(s).`,
@@ -66,29 +82,35 @@ export const applyToJob = async (req, res, next) => {
       })
     }
 
-    // ── Resolve resume URL ────────────────────────────────────────────────────
-    // Priority: newly uploaded file > profile resume (user.resume or user.resumeUrl)
+    // Resume URL (Cloudinary)
     let resumeUrl = null
 
     if (req.file) {
-      // Student uploaded a new resume just for this application
-      resumeUrl = `/uploads/${req.file.filename}`
+      // Uploaded to Cloudinary
+      resumeUrl = req.file.path
     } else if (req.user.resume || req.user.resumeUrl) {
-      // Use the resume already saved in their profile
+      // Existing profile resume
       resumeUrl = req.user.resume || req.user.resumeUrl
     }
 
     if (!resumeUrl) {
-      return res.status(400).json({ message: 'No resume found. Please upload a resume to apply.' })
+      return res.status(400).json({
+        message: 'No resume found. Please upload a resume to apply.',
+      })
     }
 
-    // ── Create application ────────────────────────────────────────────────────
+    // Create Application
     const application = await Application.create({
-      job:         jobId,
-      student:     req.user._id,
+      job: jobId,
+      student: req.user._id,
       coverLetter: coverLetter || '',
       resumeUrl,
-      statusHistory: [{ status: 'applied', changedBy: req.user._id }],
+      statusHistory: [
+        {
+          status: 'applied',
+          changedBy: req.user._id,
+        },
+      ],
     })
 
     res.status(201).json({
@@ -96,105 +118,160 @@ export const applyToJob = async (req, res, next) => {
       message: 'Application submitted successfully!',
     })
   } catch (err) {
-    if (err.code === 11000)
-      return res.status(400).json({ message: 'You have already applied to this job.' })
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: 'You have already applied to this job.',
+      })
+    }
+
     next(err)
   }
 }
 
-// @desc    Get my applications (student)
-// @route   GET /api/applications/my
-// @access  Student
+// @desc    Get my applications
 export const getMyApplications = async (req, res, next) => {
   try {
     const { status } = req.query
+
     const filter = { student: req.user._id }
-    if (status) filter.status = status
+
+    if (status) {
+      filter.status = status
+    }
 
     const applications = await Application.find(filter)
-      .populate('job', 'title company type package location status logo driveDate eligibility')
+      .populate(
+        'job',
+        'title company type package location status logo driveDate eligibility'
+      )
       .sort({ updatedAt: -1 })
 
-    res.json({ applications, total: applications.length })
+    res.json({
+      applications,
+      total: applications.length,
+    })
   } catch (err) {
     next(err)
   }
 }
 
-// @desc    Update application status (TPO/Recruiter/Admin)
-// @route   PATCH /api/applications/:id/status
-// @access  TPO + Recruiter + Admin
+// @desc    Update application status
 export const updateApplicationStatus = async (req, res, next) => {
   try {
-    const { status, note, offeredPackage, offerLetterUrl, currentRound } = req.body
+    const {
+      status,
+      note,
+      offeredPackage,
+      offerLetterUrl,
+      currentRound,
+    } = req.body
 
     const application = await Application.findById(req.params.id)
       .populate('student', 'name email')
-    if (!application)
-      return res.status(404).json({ message: 'Application not found' })
+
+    if (!application) {
+      return res.status(404).json({
+        message: 'Application not found',
+      })
+    }
 
     application.status = status
-    if (note)           application.notes         = note
+
+    if (note) application.notes = note
     if (offeredPackage) application.offeredPackage = offeredPackage
     if (offerLetterUrl) application.offerLetterUrl = offerLetterUrl
-    if (currentRound)   application.currentRound   = currentRound
+    if (currentRound) application.currentRound = currentRound
 
-    application.statusHistory.push({ status, changedBy: req.user._id, note })
+    application.statusHistory.push({
+      status,
+      changedBy: req.user._id,
+      note,
+    })
+
     await application.save()
 
     await Notification.create({
-      recipient:          application.student._id,
-      type:               status === 'selected'    ? 'selected'
-                        : status === 'rejected'    ? 'rejected'
-                        : status === 'shortlisted' ? 'shortlisted'
-                        : 'application_update',
-      title:              'Application Update',
-      message:            STATUS_MESSAGES[status] || `Your application status has been updated to: ${status}`,
-      link:               '/applications',
+      recipient: application.student._id,
+      type:
+        status === 'selected'
+          ? 'selected'
+          : status === 'rejected'
+          ? 'rejected'
+          : status === 'shortlisted'
+          ? 'shortlisted'
+          : 'application_update',
+      title: 'Application Update',
+      message:
+        STATUS_MESSAGES[status] ||
+        `Your application status has been updated to: ${status}`,
+      link: '/applications',
       relatedApplication: application._id,
     })
 
-    res.json({ application, message: `Status updated to ${status}` })
+    res.json({
+      application,
+      message: `Status updated to ${status}`,
+    })
   } catch (err) {
     next(err)
   }
 }
 
-// @desc    Withdraw application
-// @route   PATCH /api/applications/:id/withdraw
-// @access  Student
+// @desc Withdraw Application
 export const withdrawApplication = async (req, res, next) => {
   try {
-    const application = await Application.findOne({ _id: req.params.id, student: req.user._id })
-    if (!application)
-      return res.status(404).json({ message: 'Application not found' })
+    const application = await Application.findOne({
+      _id: req.params.id,
+      student: req.user._id,
+    })
 
-    if (['selected', 'rejected'].includes(application.status)) {
-      return res.status(400).json({ message: 'Cannot withdraw a finalized application.' })
+    if (!application) {
+      return res.status(404).json({
+        message: 'Application not found',
+      })
+    }
+
+    if (
+      application.status === 'selected' ||
+      application.status === 'rejected'
+    ) {
+      return res.status(400).json({
+        message: 'Cannot withdraw a finalized application.',
+      })
     }
 
     application.status = 'withdrawn'
-    application.statusHistory.push({ status: 'withdrawn', changedBy: req.user._id })
+
+    application.statusHistory.push({
+      status: 'withdrawn',
+      changedBy: req.user._id,
+    })
+
     await application.save()
 
-    res.json({ message: 'Application withdrawn successfully' })
+    res.json({
+      message: 'Application withdrawn successfully',
+    })
   } catch (err) {
     next(err)
   }
 }
 
-// @desc    Get all applications (Admin/TPO)
-// @route   GET /api/applications
-// @access  Admin + TPO
+// @desc Get All Applications
 export const getAllApplications = async (req, res, next) => {
   try {
     const { jobId, status, page = 1, limit = 20 } = req.query
+
     const filter = {}
-    if (jobId)  filter.job    = jobId
+
+    if (jobId) filter.job = jobId
     if (status) filter.status = status
 
     const applications = await Application.find(filter)
-      .populate('student', 'name email branch cgpa rollNumber hasBacklog backlogs photo prn dob address resume phone domain passingYear')
+      .populate(
+        'student',
+        'name email branch cgpa rollNumber hasBacklog backlogs photo prn dob address resume phone domain passingYear'
+      )
       .populate('job', 'title company')
       .sort({ updatedAt: -1 })
       .skip((page - 1) * limit)
@@ -205,7 +282,7 @@ export const getAllApplications = async (req, res, next) => {
     res.json({
       applications,
       total,
-      page:  Number(page),
+      page: Number(page),
       pages: Math.ceil(total / limit),
     })
   } catch (err) {

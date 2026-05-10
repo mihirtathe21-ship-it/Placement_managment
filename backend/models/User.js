@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+  import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 
 const userSchema = new mongoose.Schema(
@@ -18,17 +18,22 @@ const userSchema = new mongoose.Schema(
     backlogs:     { type: Number, default: 0 },
     domain:       { type: String, default: '' },
 
-    // ✅ Student profile fields (Edit Profile form)
-    prn:          { type: String, default: '' },   // 9-digit PRN
-    dob:          { type: String, default: '' },   // "YYYY-MM-DD"
+    // Student profile fields
+    prn:          { type: String, default: '' },
+    dob:          { type: String, default: '' },
     address:      { type: String, default: '' },
-    photo:        { type: String, default: '' },   // URL / path to uploaded photo
-    resume:       { type: String, default: '' },   // URL / path to uploaded resume PDF
+    photo:        { type: String, default: '' },
+    resume:       { type: String, default: '' },
 
     // Recruiter / TPO fields
     companyName:  { type: String, default: '' },
     designation:  { type: String, default: '' },
     isActive:     { type: Boolean, default: true },
+
+    // ── Email Verification ──────────────────────────────────────────────────
+    isVerified:          { type: Boolean, default: false },   // true after OTP confirmed
+    verificationOTP:     { type: String, default: null },     // 6-digit OTP (hashed)
+    verificationExpiry:  { type: Date,   default: null },     // OTP expires after 10 min
   },
   { timestamps: true }
 )

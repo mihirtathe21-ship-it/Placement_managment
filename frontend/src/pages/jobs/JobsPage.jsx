@@ -55,7 +55,6 @@ export default function JobsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [viewMode, setViewMode] = useState('grid')
-  const [savedJobs, setSavedJobs] = useState([])
 
   const isManagement = ['admin', 'tpo', 'recruiter'].includes(user?.role)
 
@@ -87,30 +86,29 @@ export default function JobsPage() {
     const deadline = new Date(lastDate)
     const today = new Date()
     const diffTime = deadline - today
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   }
 
   const stats = {
-    active: jobs.filter(j => j.status === 'active').length,
+    active:   jobs.filter(j => j.status === 'active').length,
     upcoming: jobs.filter(j => j.status === 'upcoming').length,
-    closed: jobs.filter(j => j.status === 'closed').length,
+    closed:   jobs.filter(j => j.status === 'closed').length,
   }
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+      <div className="min-h-screen bg-gray-50">
         <div className="p-6 lg:p-8 max-w-7xl mx-auto">
 
-          {/* Header Section */}
+          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-gray-900">
                   {isManagement ? 'Placement Drives' : 'Explore Opportunities'}
                 </h1>
                 <p className="text-gray-500 mt-1 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-yellow-500" />
+                  <Sparkles className="w-4 h-4 text-[#c89b00]" />
                   {total} {total === 1 ? 'drive available' : 'drives available'}
                 </p>
               </div>
@@ -118,51 +116,48 @@ export default function JobsPage() {
               {isManagement && (
                 <Link
                   to="/jobs/new"
-                  className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105 shadow-lg"
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm"
                 >
-                  <span className="relative z-10 flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Post New Drive
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <Plus className="w-4 h-4" />
+                  Post New Drive
                 </Link>
               )}
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-lg">
+              <div className="bg-[#FDE29A] rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-emerald-100 text-xs">Active Drives</p>
-                    <p className="text-2xl font-bold">{stats.active}</p>
+                    <p className="text-yellow-900 text-xs font-medium">Active Drives</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
                   </div>
-                  <Zap className="w-8 h-8 text-white/30" />
+                  <Zap className="w-8 h-8 text-yellow-600 opacity-40" />
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
+              <div className="bg-blue-600 rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-xs">Upcoming</p>
-                    <p className="text-2xl font-bold">{stats.upcoming}</p>
+                    <p className="text-blue-100 text-xs font-medium">Upcoming</p>
+                    <p className="text-2xl font-bold text-white">{stats.upcoming}</p>
                   </div>
-                  <Clock className="w-8 h-8 text-white/30" />
+                  <Clock className="w-8 h-8 text-white opacity-30" />
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl p-4 text-white shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-100 text-xs">Closed</p>
-                    <p className="text-2xl font-bold">{stats.closed}</p>
+                    <p className="text-gray-500 text-xs font-medium">Closed</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.closed}</p>
                   </div>
-                  <XCircle className="w-8 h-8 text-white/30" />
+                  <XCircle className="w-8 h-8 text-gray-300" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Filters Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-5 mb-6">
+          {/* Filters */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
             <div className="flex flex-wrap gap-4 items-center justify-between">
               <div className="flex-1 min-w-[250px]">
                 <div className="relative">
@@ -233,7 +228,7 @@ export default function JobsPage() {
                 {filterType && (
                   <button
                     onClick={() => setFilterType('')}
-                    className="text-xs flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-600 rounded-lg"
+                    className="text-xs flex items-center gap-1 px-2 py-1 bg-[#fffdf4] text-yellow-800 rounded-lg border border-[#FDE29A]"
                   >
                     Type: {filterType}
                     <XCircle className="w-3 h-3" />
@@ -253,7 +248,7 @@ export default function JobsPage() {
           {loading ? (
             <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-4`}>
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl p-5 animate-pulse shadow-sm">
+                <div key={i} className="bg-white rounded-2xl p-5 animate-pulse border border-gray-200">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
@@ -272,11 +267,11 @@ export default function JobsPage() {
               ))}
             </div>
           ) : jobs.length === 0 ? (
-            <div className="text-center py-24 bg-white rounded-2xl shadow-lg">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="w-10 h-10 text-gray-400" />
+            <div className="text-center py-24 bg-white rounded-2xl border border-gray-200">
+              <div className="w-24 h-24 bg-[#FDE29A] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="w-10 h-10 text-gray-700" />
               </div>
-              <p className="text-gray-500 text-lg font-medium">No drives found</p>
+              <p className="text-gray-700 text-lg font-medium">No drives found</p>
               <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
             </div>
           ) : (
@@ -290,57 +285,50 @@ export default function JobsPage() {
                   <Link
                     key={job._id}
                     to={`/jobs/${job._id}`}
-                    className={`group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden ${
+                    className={`group bg-white border border-gray-200 rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-200 overflow-hidden ${
                       viewMode === 'list' ? 'flex' : ''
                     } ${!eligible && !isManagement ? 'opacity-75' : ''}`}
                   >
-                    {/* Animated border on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl blur-xl"></div>
-                    
-                    <div className={`relative bg-white rounded-2xl p-5 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+                    <div className={`p-5 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+
                       {/* Status Badge */}
-                      <div className="absolute top-5 right-5">
-                        <span className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border font-medium ${STATUS_STYLE[job.status]}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-[#FDE29A] flex items-center justify-center text-gray-900 font-bold text-lg">
+                            {job.company?.charAt(0)}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                              {job.title}
+                            </h3>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Building2 className="w-3 h-3 text-gray-400" />
+                              <p className="text-gray-500 text-xs">{job.company}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border font-medium flex-shrink-0 ${STATUS_STYLE[job.status]}`}>
                           {StatusIcon && <StatusIcon className="w-3 h-3" />}
                           {job.status}
                         </span>
                       </div>
 
-                      {/* Company Icon */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
-                          <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                            {job.company?.charAt(0)}
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                            {job.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <Building2 className="w-3 h-3 text-gray-400" />
-                            <p className="text-gray-500 text-xs">{job.company}</p>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Job Details */}
-                      <div className="flex flex-wrap gap-3 mb-3">
+                      <div className="flex flex-wrap gap-2 mb-3">
                         {job.type && (
-                          <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+                          <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
                             <Briefcase className="w-3 h-3" />
                             {job.type}
                           </span>
                         )}
                         {job.location && (
-                          <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+                          <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
                             <MapPin className="w-3 h-3" />
                             {job.location}
                           </span>
                         )}
                         {(job.package || job.stipend) && (
-                          <span className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                          <span className="flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg">
                             <DollarSign className="w-3 h-3" />
                             {job.package || job.stipend}
                           </span>
@@ -366,9 +354,9 @@ export default function JobsPage() {
                       {/* Deadline */}
                       {job.lastDateToApply && (
                         <div className="flex items-center gap-1 text-xs mb-3">
-                          <Calendar className="w-3.5 h-3.5" />
+                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
                           <span className={daysLeft <= 3 ? 'text-red-500 font-semibold' : 'text-gray-500'}>
-                            {daysLeft > 0 
+                            {daysLeft > 0
                               ? `${daysLeft} day${daysLeft > 1 ? 's' : ''} left to apply`
                               : 'Deadline passed'}
                           </span>
@@ -376,7 +364,7 @@ export default function JobsPage() {
                       )}
 
                       {/* Footer */}
-                      <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
+                      <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {!isManagement ? (
                             job.applicationStatus ? (
@@ -384,17 +372,11 @@ export default function JobsPage() {
                                 {job.applicationStatus}
                               </span>
                             ) : (
-                              <span className={`flex items-center gap-1 text-xs font-medium ${eligible ? 'text-emerald-600' : 'text-red-600'}`}>
+                              <span className={`flex items-center gap-1 text-xs font-medium ${eligible ? 'text-emerald-600' : 'text-red-500'}`}>
                                 {eligible ? (
-                                  <>
-                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                    Eligible
-                                  </>
+                                  <><CheckCircle2 className="w-3.5 h-3.5" /> Eligible</>
                                 ) : (
-                                  <>
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    Not Eligible
-                                  </>
+                                  <><XCircle className="w-3.5 h-3.5" /> Not Eligible</>
                                 )}
                               </span>
                             )
@@ -428,27 +410,22 @@ export default function JobsPage() {
               >
                 Previous
               </button>
-              
+
               <div className="flex gap-2">
                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
                   let pageNum
-                  if (totalPages <= 5) {
-                    pageNum = i + 1
-                  } else if (page <= 3) {
-                    pageNum = i + 1
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i
-                  } else {
-                    pageNum = page - 2 + i
-                  }
-                  
+                  if (totalPages <= 5) pageNum = i + 1
+                  else if (page <= 3) pageNum = i + 1
+                  else if (page >= totalPages - 2) pageNum = totalPages - 4 + i
+                  else pageNum = page - 2 + i
+
                   return (
                     <button
                       key={i}
                       onClick={() => setPage(pageNum)}
                       className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
                         page === pageNum
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                          ? 'bg-blue-600 text-white shadow-sm'
                           : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
@@ -467,6 +444,7 @@ export default function JobsPage() {
               </button>
             </div>
           )}
+
         </div>
       </div>
     </DashboardLayout>

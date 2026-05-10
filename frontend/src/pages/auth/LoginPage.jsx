@@ -27,6 +27,12 @@ export default function HomePage() {
       toast.success(`Welcome back, ${user.name}!`)
       navigate(ROLE_PATHS[user.role] || '/login')
     } catch (err) {
+      // ── Unverified email: redirect to verify page ──────────────────────────
+      if (err.requiresVerification) {
+        toast('Please verify your email first.', { icon: '📧' })
+        navigate('/verify-email', { state: { email: err.email || data.email } })
+        return
+      }
       toast.error(err.response?.data?.message || 'Invalid credentials')
     } finally {
       setIsLoading(false)
@@ -47,9 +53,6 @@ export default function HomePage() {
           min-height: 100vh;
         }
 
-        /* ════════════════════════
-           NAVBAR — exact old style
-        ════════════════════════ */
         .navbar {
           display: flex;
           align-items: center;
@@ -61,57 +64,17 @@ export default function HomePage() {
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
 
-        /* Left: logo placeholder + name */
         .nb-brand {
           display: flex;
           align-items: center;
           gap: .6rem;
           text-decoration: none;
         }
-        .nb-logo-box {
-          width: 36px; height: 36px;
-          border-radius: 6px;
-          background: #1a3c6e;
-          display: flex; align-items: center; justify-content: center;
-          font-size: .55rem; font-weight: 800; color: #f0c040;
-          letter-spacing: -.3px; text-align: center; line-height: 1.1;
-          flex-shrink: 0;
-          /* replace with <img src={logo} /> later */
-        }
-        .nb-brand-text { }
         .nb-brand-title {
           font-size: .88rem; font-weight: 700; color: #1a1a2e; line-height: 1.2;
         }
         .nb-brand-sub { font-size: .62rem; color: #8896a8; }
 
-        /* Center nav links */
-        .nb-links {
-          display: flex; align-items: center; gap: .25rem;
-          list-style: none;
-        }
-        .nb-links a {
-          padding: .4rem .85rem; border-radius: 5px;
-          font-size: .84rem; font-weight: 500; color: #444;
-          text-decoration: none;
-          transition: color .15s, background .15s;
-        }
-        .nb-links a:hover { color: #1a3c6e; background: #f0f4fa; }
-
-        /* Right: Student Login button */
-        .nb-login {
-          padding: .42rem 1.1rem;
-          border: 1.5px solid #1a3c6e;
-          border-radius: 5px;
-          font-size: .82rem; font-weight: 600; color: #1a3c6e;
-          background: transparent; cursor: pointer;
-          text-decoration: none;
-          transition: background .15s, color .15s;
-        }
-        .nb-login:hover { background: #1a3c6e; color: #fff; }
-
-        /* ════════════════════════
-           HERO
-        ════════════════════════ */
         .hero {
           min-height: calc(100vh - 60px);
           display: flex;
@@ -129,85 +92,36 @@ export default function HomePage() {
           align-items: center;
         }
 
-        /* ── Left: college info ── */
         .hero-left {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
         }
 
-        /* logo placeholder — remove after adding real logo */
-        .college-logo {
-          width: 80px; height: 80px;
-          border-radius: 50%;
-          background: #1a3c6e;
-          display: flex; align-items: center; justify-content: center;
-          font-size: .75rem; font-weight: 800; color: #f0c040;
-          text-align: center; line-height: 1.2;
-          margin-bottom: 1.4rem;
-          /* replace entire div with: <img src={logo} alt="SES logo" style={{width:80,height:80,objectFit:'contain',marginBottom:'1.4rem'}} /> */
-        }
-
         .college-society {
-          font-size: 1rem;
-          font-weight: 500;
-          color: #7a8fa6;
-          margin-bottom: .55rem;
-          letter-spacing: .01em;
+          font-size: 1rem; font-weight: 500; color: #7a8fa6;
+          margin-bottom: .55rem; letter-spacing: .01em;
         }
-
         .college-name {
           font-family: 'Merriweather', serif;
           font-size: clamp(1.8rem, 3vw, 2.6rem);
-          font-weight: 900;
-          color: #1a1a2e;
-          line-height: 1.2;
-          margin-bottom: .8rem;
+          font-weight: 900; color: #1a1a2e; line-height: 1.2; margin-bottom: .8rem;
         }
+        .college-auto { font-size: .85rem; font-weight: 600; color: #5a7a9a; margin-bottom: .2rem; }
+        .college-affiliated { font-size: .85rem; font-weight: 600; color: #5a7a9a; margin-bottom: 1.4rem; }
+        .college-dept { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 700; color: #1a1a2e; }
 
-        .college-auto {
-          font-size: .85rem;
-          font-weight: 600;
-          color: #5a7a9a;
-          margin-bottom: .2rem;
-        }
-
-        .college-affiliated {
-          font-size: .85rem;
-          font-weight: 600;
-          color: #5a7a9a;
-          margin-bottom: 1.4rem;
-        }
-
-        .college-dept {
-          font-family: 'Merriweather', serif;
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #1a1a2e;
-        }
-
-        /* ── Right: Sign In form ── */
-        .signin-wrap {
-          display: flex;
-          justify-content: center;
-        }
-
+        .signin-wrap { display: flex; justify-content: center; }
         .signin-card {
-          width: 100%;
-          max-width: 400px;
-          background: #ffffff;
-          border: 1px solid #dde3ec;
-          border-radius: 16px;
-          padding: 2.2rem 2rem;
-          box-shadow:
-            0 2px 8px rgba(0,0,0,0.06),
-            0 12px 40px rgba(0,0,0,0.08);
+          width: 100%; max-width: 400px;
+          background: #ffffff; border: 1px solid #dde3ec;
+          border-radius: 16px; padding: 2.2rem 2rem;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.08);
         }
 
         .sc-title {
           font-family: 'Merriweather', serif;
-          font-size: 1.45rem; font-weight: 900; color: #1a1a2e;
-          margin-bottom: .3rem;
+          font-size: 1.45rem; font-weight: 900; color: #1a1a2e; margin-bottom: .3rem;
         }
         .sc-sub { font-size: .78rem; color: #8896a8; margin-bottom: 1.6rem; line-height: 1.5; }
 
@@ -223,28 +137,20 @@ export default function HomePage() {
         .inp {
           width: 100%;
           padding: .72rem .9rem .72rem 2.4rem;
-          border: 1.5px solid #dde3ec;
-          border-radius: 9px;
+          border: 1.5px solid #dde3ec; border-radius: 9px;
           font-size: .84rem; font-family: 'Inter', sans-serif;
-          color: #1a1a2e; background: #f8fafc;
-          outline: none;
+          color: #1a1a2e; background: #f8fafc; outline: none;
           transition: border-color .18s, box-shadow .18s, background .18s;
         }
         .inp::placeholder { color: #c0cdd8; }
-        .inp:focus {
-          border-color: #1a3c6e;
-          background: #fff;
-          box-shadow: 0 0 0 3px rgba(26,60,110,0.1);
-        }
+        .inp:focus { border-color: #1a3c6e; background: #fff; box-shadow: 0 0 0 3px rgba(26,60,110,0.1); }
         .inp.err { border-color: #f87171; }
         .inp.pr  { padding-right: 2.6rem; }
 
         .eye-btn {
-          position: absolute; right: .85rem; top: 50%;
-          transform: translateY(-50%);
+          position: absolute; right: .85rem; top: 50%; transform: translateY(-50%);
           background: none; border: none; cursor: pointer; padding: 0;
-          color: #b0bec8; display: flex; align-items: center;
-          transition: color .18s;
+          color: #b0bec8; display: flex; align-items: center; transition: color .18s;
         }
         .eye-btn:hover { color: #445; }
         .err-msg { font-size: .7rem; color: #ef4444; margin-top: .28rem; }
@@ -252,8 +158,7 @@ export default function HomePage() {
         .btn-signin {
           width: 100%; padding: .78rem; margin-top: .5rem;
           background: #1a3c6e; color: #fff;
-          font-size: .87rem; font-weight: 700;
-          font-family: 'Inter', sans-serif;
+          font-size: .87rem; font-weight: 700; font-family: 'Inter', sans-serif;
           border: none; border-radius: 9px; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: .45rem;
           box-shadow: 0 4px 14px rgba(26,60,110,0.25);
@@ -265,8 +170,7 @@ export default function HomePage() {
         .spinner {
           width: 16px; height: 16px;
           border: 2px solid rgba(255,255,255,.3);
-          border-top-color: #fff;
-          border-radius: 50%;
+          border-top-color: #fff; border-radius: 50%;
           animation: spin .7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -276,38 +180,27 @@ export default function HomePage() {
         .sc-register a { color: #1a3c6e; font-weight: 600; text-decoration: none; }
         .sc-register a:hover { text-decoration: underline; }
 
-        /* ── Responsive ── */
         @media (max-width: 820px) {
           .hero-inner { grid-template-columns: 1fr; gap: 2.5rem; }
           .hero-left { align-items: center; text-align: center; }
-          .nb-links { display: none; }
         }
       `}</style>
 
-      {/* ══ NAVBAR ══ */}
       <nav className="navbar">
-        {/* Brand */}
         <a href="#" className="nb-brand">
           <img src={logo} alt="SES Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-          <div className="nb-brand-text">
+          <div>
             <div className="nb-brand-title">Training and Placement</div>
             <div className="nb-brand-sub">R. C. Patel Institute of Technology, Shirpur</div>
           </div>
         </a>
       </nav>
 
-      {/* ══ HERO ══ */}
       <main className="hero">
         <div className="hero-inner">
 
-          {/* ── Left: College info ── */}
           <div className="hero-left">
-            {/*
-              LOGO PLACEHOLDER — replace this div with your actual logo image:
-              <img src={logo} alt="SES Logo" style={{width:80,height:80,objectFit:'contain',marginBottom:'1.4rem'}} />
-            */}
             <img src={logo} alt="SES Logo" style={{ width: 80, height: 80, objectFit: 'contain', marginBottom: '1.4rem' }} />
-
             <p className="college-society">Shirpur Education Society's</p>
             <h1 className="college-name">
               R. C. Patel Institute of Technology,<br />Shirpur
@@ -317,7 +210,6 @@ export default function HomePage() {
             <p className="college-dept">Training and Placement Department</p>
           </div>
 
-          {/* ── Right: Sign In ── */}
           <div className="signin-wrap">
             <div className="signin-card">
               <h2 className="sc-title">Sign In</h2>
@@ -371,7 +263,7 @@ export default function HomePage() {
 
               <div className="sc-divider" />
               <p className="sc-register">
-                New to PlaceNext?{' '}
+                New to RCPIT?{' '}
                 <Link to="/register">Create account</Link>
               </p>
             </div>
@@ -382,7 +274,6 @@ export default function HomePage() {
     </>
   )
 }
-
 
 // import { useState } from 'react'
 // import { Link, useNavigate } from 'react-router-dom'

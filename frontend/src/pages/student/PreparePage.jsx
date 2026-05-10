@@ -8,10 +8,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import { useAuth } from "../../context/AuthContext";
 
-// ── Prepare feature cards ─────────────────────────────────────────────────────
 const PREPARE_CARDS = [
-
-  // ── 1. APTITUDE ────────────────────────────────────────────────────────────
   {
     id: "aptitude",
     title: "Aptitude Practice",
@@ -27,24 +24,12 @@ const PREPARE_CARDS = [
       {
         heading: "🎓 Campus Credentials (College Platform)",
         links: [
-          {
-            label: "Aptitude Practice",
-            url:   "https://learn.campuscredentials.com/learn",
-            desc:  "Learn & practice aptitude topics",
-            highlight: true,
-          },
-          {
-            label: "Aptitude Test",
-            url:   "https://code.campuscredentials.com/",
-            desc:  "Take official aptitude tests",
-            highlight: false,
-          },
+          { label: "Aptitude Practice", url: "https://learn.campuscredentials.com/learn", desc: "Learn & practice aptitude topics", highlight: true },
+          { label: "Aptitude Test",     url: "https://code.campuscredentials.com/",       desc: "Take official aptitude tests",    highlight: false },
         ],
       },
     ],
   },
-
-  // ── 2. CODING ──────────────────────────────────────────────────────────────
   {
     id: "coding",
     title: "Coding Practice",
@@ -60,33 +45,21 @@ const PREPARE_CARDS = [
       {
         heading: "🎓 CodeChef (College Platform)",
         links: [
-          {
-            label: "CodeChef ",
-            url:   "https://codechef.com",
-            desc:  "Official college coding challenges — start here",
-            highlight: true,
-          },
+          { label: "CodeChef",  url: "https://codechef.com",  desc: "Official college coding challenges — start here", highlight: true  },
         ],
       },
       {
         heading: "🌐 Additional Platform",
         links: [
-          {
-            label: "Leetcode",
-            url:   "https://leetcode.com",
-            desc:  "Competitive programming & contests",
-            highlight: false,
-          },
+          { label: "Leetcode", url: "https://leetcode.com", desc: "Competitive programming & contests", highlight: false },
         ],
       },
     ],
   },
-
-  // ── 3. TECH COURSES ────────────────────────────────────────────────────────
   {
     id: "courses",
     title: "Tech Courses",
-    desc: "Curated learning paths for trending technologies. Track your progress and earn badges — coming soon on PlaceNext.",
+    desc: "Curated learning paths for trending technologies. Track your progress and earn badges — coming soon on RCPIT.",
     icon: BookOpen,
     gradient: "from-emerald-500 to-teal-500",
     bg: "from-emerald-50 to-teal-50",
@@ -95,19 +68,12 @@ const PREPARE_CARDS = [
     badgeColor: "bg-emerald-100 text-emerald-700",
     tags: ["Web Dev", "AI/ML", "Cloud", "Core CS"],
     comingSoon: true,
-    comingSoonFeatures: [
-      "Curated roadmaps per branch",
-      "Progress tracking & badges",
-      "Certificate integration",
-      "Recommended by your TPO",
-    ],
+    comingSoonFeatures: ["Curated roadmaps per branch", "Progress tracking & badges", "Certificate integration", "Recommended by your TPO"],
   },
-
-  // ── 4. ATS RESUME SCORE ────────────────────────────────────────────────────
   {
     id: "ats",
     title: "ATS Resume Score",
-    desc: "Instantly check how your resume performs against ATS filters — built directly into PlaceNext.",
+    desc: "Instantly check how your resume performs against ATS filters — built directly into RCPIT.",
     icon: FileSearch,
     gradient: "from-orange-500 to-amber-500",
     bg: "from-orange-50 to-amber-50",
@@ -116,19 +82,12 @@ const PREPARE_CARDS = [
     badgeColor: "bg-orange-100 text-orange-700",
     tags: ["ATS Score", "Keyword Match", "Format Check"],
     comingSoon: true,
-    comingSoonFeatures: [
-      "Upload resume & get instant score",
-      "Keyword gap analysis",
-      "Format & length suggestions",
-      "Match against job descriptions",
-    ],
+    comingSoonFeatures: ["Upload resume & get instant score", "Keyword gap analysis", "Format & length suggestions", "Match against job descriptions"],
   },
-
-  // ── 5. RESUME BUILDER ──────────────────────────────────────────────────────
   {
     id: "resume",
     title: "Resume Builder",
-    desc: "Build a professional ATS-friendly resume inside PlaceNext — with pre-filled academic info from your profile.",
+    desc: "Build a professional ATS-friendly resume inside RCPIT — with pre-filled academic info from your profile.",
     icon: PenTool,
     gradient: "from-rose-500 to-pink-500",
     bg: "from-rose-50 to-pink-50",
@@ -137,15 +96,8 @@ const PREPARE_CARDS = [
     badgeColor: "bg-rose-100 text-rose-700",
     tags: ["Auto-fill Profile", "PDF Export", "ATS Friendly"],
     comingSoon: true,
-    comingSoonFeatures: [
-      "Auto-fill from your PlaceNext profile",
-      "Multiple ATS-optimised templates",
-      "One-click PDF download",
-      "Share directly with recruiters",
-    ],
+    comingSoonFeatures: ["Auto-fill from your RCPIT  profile", "Multiple ATS-optimised templates", "One-click PDF download", "Share directly with recruiters"],
   },
-
-  // ── 6. INTERVIEW PREP ──────────────────────────────────────────────────────
   {
     id: "interview",
     title: "Interview Prep",
@@ -158,12 +110,7 @@ const PREPARE_CARDS = [
     badgeColor: "bg-yellow-100 text-yellow-700",
     tags: ["HR Rounds", "Technical", "Mock Interview", "GD Topics"],
     comingSoon: true,
-    comingSoonFeatures: [
-      "AI mock interview with feedback",
-      "Company-wise HR question bank",
-      "Group discussion topic practice",
-      "Peer mock interview scheduling",
-    ],
+    comingSoonFeatures: ["AI mock interview with feedback", "Company-wise HR question bank", "Group discussion topic practice", "Peer mock interview scheduling"],
   },
 ];
 
@@ -175,25 +122,24 @@ const TIPS = [
   "Research the company thoroughly before every interview 🔍",
 ];
 
-// ── Coming Soon card ──────────────────────────────────────────────────────────
 function ComingSoonCard({ card }) {
   const Icon = card.icon;
   return (
-    <div className={`bg-gradient-to-br ${card.bg} border ${card.border} rounded-2xl shadow-sm flex flex-col overflow-hidden opacity-90`}>
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col overflow-hidden opacity-90">
       <div className="p-5 flex-1">
         <div className="flex items-start justify-between mb-4">
-          <div className={`w-12 h-12 bg-gradient-to-br ${card.gradient} rounded-xl flex items-center justify-center shadow opacity-70`}>
-            <Icon className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 bg-[#FDE29A] rounded-xl flex items-center justify-center">
+            <Icon className="w-6 h-6 text-gray-900" />
           </div>
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${card.badgeColor} flex items-center gap-1`}>
             <Lock size={9} /> {card.badge}
           </span>
         </div>
-        <h3 className="font-bold text-gray-800 text-base mb-1.5">{card.title}</h3>
+        <h3 className="font-bold text-gray-900 text-base mb-1.5">{card.title}</h3>
         <p className="text-xs text-gray-500 leading-relaxed mb-4">{card.desc}</p>
         <div className="flex flex-wrap gap-1.5 mb-5">
           {card.tags.map((tag) => (
-            <span key={tag} className="text-[10px] bg-white/80 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-full font-medium">
+            <span key={tag} className="text-[10px] bg-gray-100 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-full font-medium">
               {tag}
             </span>
           ))}
@@ -201,39 +147,38 @@ function ComingSoonCard({ card }) {
         <div className="space-y-2">
           {card.comingSoonFeatures.map((f) => (
             <div key={f} className="flex items-center gap-2 text-xs text-gray-600">
-              <Rocket size={11} className="text-gray-400 flex-shrink-0" />
+              <Rocket size={11} className="text-blue-400 flex-shrink-0" />
               {f}
             </div>
           ))}
         </div>
       </div>
-      <div className="bg-white/40 border-t border-white/60 px-5 py-3 flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        <span className="text-xs text-gray-500 font-medium">Feature coming soon on PlaceNext!</span>
+      <div className="bg-[#fffdf4] border-t border-[#FDE29A] px-5 py-3 flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-[#c89b00] animate-pulse" />
+        <span className="text-xs text-gray-500 font-medium">Feature coming soon on RCPIT!</span>
       </div>
     </div>
   );
 }
 
-// ── Live card ─────────────────────────────────────────────────────────────────
 function LiveCard({ card }) {
   const Icon = card.icon;
   return (
-    <div className={`bg-gradient-to-br ${card.bg} border ${card.border} rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden`}>
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:border-blue-200 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
       <div className="p-5 flex-1">
         <div className="flex items-start justify-between mb-4">
-          <div className={`w-12 h-12 bg-gradient-to-br ${card.gradient} rounded-xl flex items-center justify-center shadow`}>
-            <Icon className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 bg-[#FDE29A] rounded-xl flex items-center justify-center">
+            <Icon className="w-6 h-6 text-gray-900" />
           </div>
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${card.badgeColor}`}>
             {card.badge}
           </span>
         </div>
-        <h3 className="font-bold text-gray-800 text-base mb-1.5">{card.title}</h3>
+        <h3 className="font-bold text-gray-900 text-base mb-1.5">{card.title}</h3>
         <p className="text-xs text-gray-500 leading-relaxed mb-4">{card.desc}</p>
         <div className="flex flex-wrap gap-1.5 mb-5">
           {card.tags.map((tag) => (
-            <span key={tag} className="text-[10px] bg-white/80 text-gray-600 border border-gray-200 px-2.5 py-0.5 rounded-full font-medium">
+            <span key={tag} className="text-[10px] bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-0.5 rounded-full font-medium">
               {tag}
             </span>
           ))}
@@ -255,14 +200,14 @@ function LiveCard({ card }) {
                     rel="noreferrer"
                     className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 transition-all group/link border
                       ${link.highlight
-                        ? "bg-indigo-600 border-indigo-500 hover:bg-indigo-700"
-                        : "bg-white/90 hover:bg-white border-gray-200"}`}
+                        ? "bg-blue-600 border-blue-500 hover:bg-blue-700"
+                        : "bg-gray-50 hover:bg-white border-gray-200"}`}
                   >
                     <div>
                       <p className={`text-xs font-semibold transition-colors
                         ${link.highlight
                           ? "text-white"
-                          : "text-gray-800 group-hover/link:text-indigo-600"}`}>
+                          : "text-gray-800 group-hover/link:text-blue-600"}`}>
                         {link.label}
                         {link.highlight && (
                           <span className="ml-2 text-[9px] bg-white/20 text-white px-1.5 py-0.5 rounded-full">
@@ -270,7 +215,7 @@ function LiveCard({ card }) {
                           </span>
                         )}
                       </p>
-                      <p className={`text-[10px] ${link.highlight ? "text-indigo-200" : "text-gray-400"}`}>
+                      <p className={`text-[10px] ${link.highlight ? "text-blue-200" : "text-gray-400"}`}>
                         {link.desc}
                       </p>
                     </div>
@@ -279,7 +224,7 @@ function LiveCard({ card }) {
                       className={`flex-shrink-0 ml-2 transition-colors
                         ${link.highlight
                           ? "text-white/60 group-hover/link:text-white"
-                          : "text-gray-400 group-hover/link:text-indigo-500"}`}
+                          : "text-gray-400 group-hover/link:text-blue-500"}`}
                     />
                   </a>
                 ))}
@@ -309,7 +254,7 @@ export default function PreparePage() {
     <DashboardLayout>
       <div className="bg-gray-50 min-h-screen">
 
-        {/* ── SIMPLE WHITE HEADER ───────────────────────────────────────────── */}
+        {/* HEADER */}
         <div className="bg-white border-b border-gray-200 px-6 py-5">
           <div className="max-w-6xl mx-auto">
             <button
@@ -319,11 +264,11 @@ export default function PreparePage() {
               <ArrowLeft size={15} /> Back to Dashboard
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-gray-500" />
+              <div className="w-10 h-10 bg-[#FDE29A] rounded-xl flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-gray-900" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">Prepare</h1>
+                <h1 className="text-xl font-bold text-gray-900">Prepare</h1>
                 <p className="text-xs text-gray-400">Your placement preparation hub</p>
               </div>
             </div>
@@ -332,21 +277,18 @@ export default function PreparePage() {
 
         <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
 
-          
-
-
-          {/* ── CHECKLIST ────────────────────────────────────────────────────── */}
+          {/* CHECKLIST */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Zap size={15} className="text-amber-500" />
-              <h3 className="font-semibold text-gray-800 text-sm">Placement Season Checklist</h3>
+              <Zap size={15} className="text-[#c89b00]" />
+              <h3 className="font-semibold text-gray-900 text-sm">Placement Season Checklist</h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Resume Uploaded",  done: hasResume       },
-                { label: "Profile Complete", done: profileComplete  },
-                { label: "Practice DSA",     done: false            },
-                { label: "Mock Interview",   done: false            },
+                { label: "Resume Uploaded",  done: hasResume      },
+                { label: "Profile Complete", done: profileComplete },
+                { label: "Practice DSA",     done: false          },
+                { label: "Mock Interview",   done: false          },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -364,9 +306,9 @@ export default function PreparePage() {
             </div>
           </div>
 
-          {/* ── LIVE CARDS ───────────────────────────────────────────────────── */}
+          {/* LIVE CARDS */}
           <div>
-            <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
               Live Now
             </h2>
@@ -377,10 +319,10 @@ export default function PreparePage() {
             </div>
           </div>
 
-          {/* ── COMING SOON CARDS ────────────────────────────────────────────── */}
+          {/* COMING SOON CARDS */}
           <div>
-            <h2 className="text-base font-bold text-gray-800 mb-1 flex items-center gap-2">
-              <Lock size={14} className="text-gray-400" /> Coming Soon on PlaceNext
+            <h2 className="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <Lock size={14} className="text-gray-400" /> Coming Soon on RCPIT
             </h2>
             <p className="text-xs text-gray-400 mb-4">
               These features are being built exclusively for your college — no external websites needed.
@@ -392,18 +334,18 @@ export default function PreparePage() {
             </div>
           </div>
 
-          {/* ── BOTTOM BANNER ────────────────────────────────────────────────── */}
-          <div className="bg-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5 shadow-lg">
+          {/* BOTTOM BANNER */}
+          <div className="bg-blue-600 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5 shadow-sm">
             <div className="text-4xl">🎯</div>
             <div className="text-center sm:text-left">
               <p className="text-white font-bold text-lg">Your placement journey starts today.</p>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-blue-100 text-sm mt-1">
                 Consistent daily practice beats last-minute cramming every single time.
               </p>
             </div>
             <button
               onClick={() => navigate("/jobs")}
-              className="sm:ml-auto flex-shrink-0 bg-white text-gray-800 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-gray-100 transition flex items-center gap-2"
+              className="sm:ml-auto flex-shrink-0 bg-[#FDE29A] text-gray-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-[#f5d56a] transition flex items-center gap-2"
             >
               Browse Active Drives <ChevronRight size={14} />
             </button>
